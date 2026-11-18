@@ -154,6 +154,7 @@ def generate(items):
         "优先选择原文材料足够丰富的新闻。每条summary用100至170字解释发生了什么，"
         "context用100至200字写成‘背景与影响’：先解释必要的前情或机制，再交代这件事对谁有什么已经发生或有证据支持的潜在影响。"
         "不要强行解释原因；没有证据的因果关系、未来预测不得写成事实。不要编造历史背景、引语或因果关系，不要使用‘素材仅’‘现有资料不足’等套话。"
+        "为每篇新闻额外选出0至4个读者可能不熟悉、但理解报道很重要的专有名词（优先冷门人物、作品、组织、地区；不要选择特朗普、习近平、普京等广为人知的领导人）。entities是数组，每项包含name、definition、evidence：name必须逐字出现在summary或context，definition为不超过65字的中文释义，evidence必须是原始输入新闻材料中逐字存在、支持释义的至少12字连续片段；没有来源支持就不要提供。每篇最多4个，宁缺毋滥。"
         "材料不足的新闻请跳过。只返回JSON对象，格式为"
         "{\"articles\":[{\"source_id\":\"S1\",\"title\":\"中文标题\","
         "\"summary\":\"事实概述\",\"context\":\"具体背景解读\"}]}。"
@@ -178,12 +179,27 @@ def generate(items):
             if any(term in context for term in ("现有资料不足", "素材仅", "未说明", "无法判断更深层", "没有足够信息")) or len(context) < 55:
                 print("Skipped low-information background:", source_id)
                 continue
+            # Entity explanations require a verbatim supporting span from the input source.
+            source_text = json.dumps(source, ensure_ascii=False)
+            valid_entities = []
+            for entry in a.get("entities", []) if isinstance(a.get("entities"), list) else []:
+                if not isinstance(entry, dict):
+                    continue
+                name, definition, evidence = (str(entry.get(k, "")).strip() for k in ("name", "definition", "evidence"))
+                if (2 <= len(name) <= 24 and 8 <= len(definition) <= 65 and
+                    12 <= len(evidence) <= 250 and evidence in source_text and
+                    name in a["summary"] + context and name not in ("特朗普", "习近平", "普京", "拜登", "泽连斯基") and
+                    name not in {e["name"] for e in valid_entities}):
+                    valid_entities.append({"name": name, "definition": definition})
+                if len(valid_entities) >= 4:
+                    break
             seen.add(source_id)
             clean.append({
                 "title": a["title"].strip(), "summary": a["summary"].strip(),
                 "context": context, "category": source["category"],
                 "source_url": source["url"], "publisher": source["publisher"],
                 "published": source["published"], "image": source.get("image", ""),
+                "entities": valid_entities,
             })
         return clean
     messages = [
@@ -335,6 +351,9 @@ def render(articles):
         "布鲁塞尔": "比利时首都，也是欧盟多家重要机构的所在地。",
     }
     glossary.update(entities)
+    # Common names are intentionally not annotated; prioritize unfamiliar entities.
+    for familiar in ("特朗普", "拜登", "习近平", "普京", "泽连斯基", "马斯克", "美国", "俄罗斯", "中国", "欧盟", "联合国", "谷歌", "微软", "苹果公司"):
+        glossary.pop(familiar, None)
     terms = sorted(glossary, key=len, reverse=True)
     term_pattern = re.compile("|".join(re.escape(t) for t in terms))
     number_pattern = re.compile(r"\d+(?:[.,]\d+)?(?:%|％|年|月|日|人|亿|万|席|票|美元|元)?")
@@ -345,7 +364,7 @@ def render(articles):
         r"上涨|下跌|增长|下降|突破|创下|获得|遭到|导致|引发|"
         r"将于|计划|预计|可能)[^，。；！？：]{2,22}"
     )
-    def focus_text(value, article_context=None):
+    def focus_text(value, article_context=None, article_entities=None, seen_terms=None):
         """Only style spans already present in sourced editorial copy; never invent claims."""
         value = str(value)
         spans = []
@@ -357,9 +376,17 @@ def render(articles):
             for j in range(start, end):
                 occupied[j] = True
 
-        # Definitions take precedence; no automatic AI-generated definitions.
-        for match in term_pattern.finditer(value):
+        # Rare, source-supported entities take priority over the static glossary.
+        definitions = dict(glossary)
+        definitions.update(article_entities or {})
+        pattern = re.compile("|".join(re.escape(t) for t in sorted(definitions, key=len, reverse=True)))
+        for match in pattern.finditer(value):
+            term = match.group()
+            if seen_terms is not None and term in seen_terms:
+                continue
             mark(match.start(), match.end(), "term")
+            if seen_terms is not None:
+                seen_terms.add(term)
         # Facts and outcomes should be noticeable without painting entire paragraphs.
         for match in list(number_pattern.finditer(value))[:3]:
             mark(match.start(), match.end(), "fact")
@@ -384,7 +411,7 @@ def render(articles):
             fragment = esc(value[first:last])
             if kind == "term":
                 result.append('<button type="button" class="term" data-definition="' +
-                              esc(glossary[value[first:last]] + ("\n\n在这篇新闻中：" + article_context[value[first:last]] if article_context and value[first:last] in article_context else "")) + '" aria-label="解释术语：' +
+                              esc(definitions[value[first:last]] + ("\n\n在这篇新闻中：" + article_context[value[first:last]] if article_context and value[first:last] in article_context else "")) + '" aria-label="解释术语：' +
                               fragment + '">' + fragment + '</button>')
             else:
                 result.append('<strong class="focus-' + kind + '">' + fragment + '</strong>')
@@ -399,6 +426,8 @@ def render(articles):
         # Derive entity relevance only from sentences already present in the published story.
         # Do not invent a causal explanation or a new biographical claim.
         article_context = {}
+        article_entities = {e["name"]: e["definition"] for e in a.get("entities", [])}
+        seen_terms = set()
         for entity in entities:
             for sentence in re.split(r"(?<=[。！？])", summary + "。" + context):
                 sentence = sentence.strip()
@@ -413,9 +442,9 @@ def render(articles):
         cards[a["category"]].append(
             '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
             '<h2>' + esc(headline) + '</h2>' + photo +
-            '<div class="takeaway"><span class="micro"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-12h-7z"/></svg> 10 秒看懂</span><p>' + focus_text(takeaway, article_context) + '</p></div>'
-            '<div class="standard-block"><h3>发生了什么？</h3><p>' + focus_text(summary, article_context) + '</p></div>'
-            '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context) + '</p>'
+            '<div class="takeaway"><span class="micro"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-12h-7z"/></svg> 10 秒看懂</span><p>' + focus_text(takeaway, article_context, article_entities, seen_terms) + '</p></div>'
+            '<div class="standard-block"><h3>发生了什么？</h3><p>' + focus_text(summary, article_context, article_entities, seen_terms) + '</p></div>'
+            '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context, article_entities, seen_terms) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
             '<div class="story-bottom"><a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">核对原始报道：' + esc(a["publisher"]) + ' <svg class="ui-icon source-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>'
             '<button type="button" class="share-story" aria-label="分享这篇新闻的文字内容"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 14v6h14v-6"/></svg> 分享文章</button></div></article>'
