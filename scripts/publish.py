@@ -150,27 +150,39 @@ def generate(items):
     lookup = {item["source_id"]: item for item in numbered}
     instructions = (
         "你是严谨的中文新闻编辑。素材包含RSS摘要及可能获取到的原文段落article_excerpt。"
-        "选择5至8条不同且重要的新闻，国际政治、娱乐文化、消费科技三类都必须有。"
-        "优先选择原文材料足够丰富的新闻。每条summary用100至170字解释发生了什么，"
+        "选择5至8个不同且重要的新闻事件，国际政治、娱乐文化、消费科技三类都必须有。一个事件只能生成一篇文章；同一事件即使有多家媒体、多个角度或连续报道，也必须合并，绝不能按RSS条目分别写。不同事件不能因共享人物、国家或主题而误合并。"
+        "优先选择原文材料足够丰富的新闻。每篇用source_ids数组列出所有实际用于该事件的素材编号（1至5个），按最有代表性的主来源排第一，禁止重复编号或引用无关来源。不同来源有矛盾时明确归属，不能把尚未核实的说法写成共识；补充进展时标明时间顺序。每条summary用100至170字解释发生了什么，"
         "context用100至200字写成‘背景与影响’：先解释必要的前情或机制，再交代这件事对谁有什么已经发生或有证据支持的潜在影响。"
         "不要强行解释原因；没有证据的因果关系、未来预测不得写成事实。不要编造历史背景、引语或因果关系，不要使用‘素材仅’‘现有资料不足’等套话。"
         "为每篇新闻额外选出0至4个读者可能不熟悉、但理解报道很重要的专有名词（优先冷门人物、作品、组织、地区；不要选择特朗普、习近平、普京等广为人知的领导人）。entities是数组，每项包含name、definition、evidence：name必须逐字出现在summary或context，definition为不超过65字的中文释义，evidence必须是原始输入新闻材料中逐字存在、支持释义的至少12字连续片段；没有来源支持就不要提供。每篇最多4个，宁缺毋滥。"
         "材料不足的新闻请跳过。只返回JSON对象，格式为"
-        "{\"articles\":[{\"source_id\":\"S1\",\"title\":\"中文标题\","
+        "{\"articles\":[{\"source_ids\":[\"S1\",\"S2\"],\"title\":\"中文标题\","
         "\"summary\":\"事实概述\",\"context\":\"具体背景解读\",\"entities\":[{\"name\":\"专有名词\",\"definition\":\"释义\",\"evidence\":\"原文证据\"}]}]}。"
-        "source_id必须直接复制输入素材中的编号，不要输出URL或category，"
+        "source_ids必须直接复制输入素材中的编号，不要输出URL或category；同一素材不可被多篇文章重复使用，"
         "不要创造编号。标题不超过32字。"
     )
     def validate(articles):
         clean = []
         seen = set()
+        seen_events = set()
         for a in articles:
             if not isinstance(a, dict):
                 continue
-            source_id = str(a.get("source_id", "")).strip()
-            source = lookup.get(source_id)
-            if not source or source_id in seen:
-                print("Skipped invalid or duplicate source_id:", source_id[:30])
+            ids = a.get("source_ids")
+            if not isinstance(ids, list) or not ids:
+                ids = [a.get("source_id", "")]
+            ids = list(dict.fromkeys(str(x).strip() for x in ids))[:5]
+            sources = [lookup[x] for x in ids if x in lookup]
+            if not sources or len(sources) != len(ids) or any(x in seen for x in ids):
+                print("Skipped invalid or reused sources:", ids)
+                continue
+            source = sources[0]
+            if any(other["category"] != source["category"] for other in sources):
+                print("Skipped mixed-category event:", ids)
+                continue
+            event_key = re.sub(r"[^\\w\\u4e00-\\u9fff]", "", str(a.get("title", "")).lower())[:40]
+            if event_key in seen_events:
+                print("Skipped duplicate event:", event_key)
                 continue
             if not all(isinstance(a.get(k), str) and a[k].strip() for k in ("title", "summary", "context")):
                 print("Skipped incomplete article:", source_id)
@@ -180,7 +192,7 @@ def generate(items):
                 print("Skipped low-information background:", source_id)
                 continue
             # Entity explanations require a verbatim supporting span from the input source.
-            source_text = json.dumps(source, ensure_ascii=False)
+            source_text = json.dumps(sources, ensure_ascii=False)
             valid_entities = []
             for entry in a.get("entities", []) if isinstance(a.get("entities"), list) else []:
                 if not isinstance(entry, dict):
@@ -193,11 +205,13 @@ def generate(items):
                     valid_entities.append({"name": name, "definition": definition})
                 if len(valid_entities) >= 4:
                     break
-            seen.add(source_id)
+            seen.update(ids)
+            seen_events.add(event_key)
             clean.append({
                 "title": a["title"].strip(), "summary": a["summary"].strip(),
                 "context": context, "category": source["category"],
                 "source_url": source["url"], "publisher": source["publisher"],
+                "sources": [{"url": x["url"], "publisher": x["publisher"]} for x in sources],
                 "published": source["published"], "image": source.get("image", ""),
                 "entities": valid_entities,
             })
@@ -234,7 +248,7 @@ def generate(items):
             {"role": "assistant", "content": raw},
             {"role": "user", "content": (
                 "上一版未满足校验。请重新输出5至8条且三大类别均有的文章，"
-                "每条仅使用输入中的source_id；不要重复编号。"
+                "每篇使用输入中的source_ids数组；同一事件合并为一篇，且不同文章不要重复素材编号。"
                 "确保context具体、信息充分，不要编造事实或使用空洞套话。"
             )},
         ])
@@ -254,7 +268,7 @@ def generate(items):
             continue
         print("Repairing missing category:", category, "with", len(candidates), "sources")
         repair_messages = [
-            {"role": "system", "content": instructions + "本次只写一篇指定栏目的新闻，必须使用提供的source_id，并返回JSON对象articles数组。"},
+            {"role": "system", "content": instructions + "本次只写一篇指定栏目的新闻，必须使用提供的source_ids数组，并返回JSON对象articles数组。"},
             {"role": "user", "content": "请只从以下" + category + "素材中选择一条信息充分的新闻，生成一篇完整的中文新闻，不要引用其他类别：\\n" + json.dumps(candidates, ensure_ascii=False)},
         ]
         payload = {
