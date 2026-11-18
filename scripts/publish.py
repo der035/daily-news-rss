@@ -172,22 +172,32 @@ def collect():
                     items.append(dict(category=category, publisher=publisher, title=title, url=link, image=image_url, description=description[:600], published=date.isoformat()))
         except Exception as error:
             print("Source unavailable:", publisher, type(error).__name__)
-    # Balance candidates across publishers and categories.
-    selected, per_source, per_category = [], {}, {}
-    for item in sorted(items, key=lambda x: x["published"], reverse=True):
-        pub, cat = item["publisher"], item["category"]
-        if per_source.get(pub, 0) >= (5 if cat == "国内新闻" else 10) or per_category.get(cat, 0) >= 32:
-            continue
-        selected.append(item)
-        per_source[pub] = per_source.get(pub, 0) + 1
-        per_category[cat] = per_category.get(cat, 0) + 1
-    return selected[:110]
+    # Allocate a separate candidate budget to every category. A global
+    # newest-first [:110] cut used to starve later categories (notably tech)
+    # whenever domestic/Apple feeds published more frequently.
+    per_category = {}
+    for category in CATEGORIES:
+        selected, per_source, seen_urls = [], {}, set()
+        candidates = sorted((x for x in items if x["category"] == category),
+                            key=lambda x: x["published"], reverse=True)
+        for item in candidates:
+            pub = item["publisher"]
+            if item["url"] in seen_urls or per_source.get(pub, 0) >= (5 if category == "国内新闻" else 10):
+                continue
+            selected.append(item)
+            seen_urls.add(item["url"])
+            per_source[pub] = per_source.get(pub, 0) + 1
+            if len(selected) >= 24:
+                break
+        per_category[category] = selected
+        print("Fresh candidates:", category, len(selected), "publishers:", len(per_source), flush=True)
+    return [item for category in CATEGORIES for item in per_category[category]]
 
 def generate(items):
     key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
     if not key:
         raise RuntimeError("DEEPSEEK_API_KEY is missing; keeping previous edition.")
-    if len(items) < 20 or len({i["category"] for i in items}) < len(CATEGORIES):
+    if any(sum(item["category"] == category for item in items) < STORIES_PER_CATEGORY for category in CATEGORIES):
         raise RuntimeError("Insufficient recent sourced coverage; keeping previous edition.")
     model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
     numbered = [dict(item, source_id="S" + str(i + 1)) for i, item in enumerate(items)]
