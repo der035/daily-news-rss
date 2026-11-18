@@ -39,11 +39,25 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          page = Path('docs/index.html').read_text(encoding='utf-8')
-          scripts = re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>', page)
-          assert scripts, 'Missing inline JavaScript'
-          Path('/tmp/daily-news-inline.js').write_text('\\n'.join(scripts), encoding='utf-8')
+          from html.parser import HTMLParser
+          class ScriptCollector(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.inside = False
+                  self.parts = []
+              def handle_starttag(self, tag, attrs):
+                  if tag == 'script' and not dict(attrs).get('src'):
+                      self.inside = True
+              def handle_endtag(self, tag):
+                  if tag == 'script':
+                      self.inside = False
+              def handle_data(self, data):
+                  if self.inside:
+                      self.parts.append(data)
+          collector = ScriptCollector()
+          collector.feed(page)
+          assert collector.parts, 'Missing inline JavaScript'
+          Path('/tmp/daily-news-inline.js').write_text(chr(10).join(collector.parts), encoding='utf-8')
           PY
           node --check /tmp/daily-news-inline.js
       - name: Commit publication
