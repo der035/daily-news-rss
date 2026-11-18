@@ -33,6 +33,11 @@ SOURCES = [
     ("国内新闻", "Google News·第一财经", "https://news.google.com/rss/search?q=site%3Ayicai.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
     ("国内新闻", "Google News·澎湃新闻", "https://news.google.com/rss/search?q=site%3Athepaper.cn+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
     ("国内新闻", "Google News·新京报", "https://news.google.com/rss/search?q=site%3Abjnews.com.cn+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·新浪新闻", "https://news.google.com/rss/search?q=site%3Anews.sina.com.cn+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·搜狐新闻", "https://news.google.com/rss/search?q=site%3Anews.sohu.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·网易新闻", "https://news.google.com/rss/search?q=site%3A163.com%2Fnews+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·腾讯新闻", "https://news.google.com/rss/search?q=site%3Anews.qq.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·界面新闻", "https://news.google.com/rss/search?q=site%3Ajiemian.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
     ("国际政治", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
     ("国际政治", "The Guardian World", "https://www.theguardian.com/world/rss"),
     ("国际政治", "NPR World", "https://feeds.npr.org/1004/rss.xml"),
@@ -189,7 +194,7 @@ def generate(items):
     lookup = {item["source_id"]: item for item in numbered}
     instructions = (
         "你是严谨的中文新闻编辑。每次只编辑指定的一个栏目，从过去约24小时的RSS素材中选出恰好5个最重要、互不重复的新闻事件，按重要性排序。"
-        "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。国内新闻应覆盖政策、经济、社会等领域，尽量选择不同独立媒体的事件，五篇新闻尽可能来自至少三家不同媒体；Google News是聚合入口，不代表原始报道媒体；外媒报道必须聚焦中国大陆国内事务。"
+        "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。国内新闻应覆盖政策、经济、社会等领域，尽量选择不同独立媒体的事件，五篇新闻尽可能来自至少三家不同媒体；Google News是聚合入口，不代表原始报道媒体；新浪、搜狐、网易、腾讯等门户转载的稿件应尽量追溯原始报道，不得把转载当作独立信源；微博热搜只可作为发现新闻线索，不得将未经独立核实的热搜或用户发帖当作已证实事实；外媒报道必须聚焦中国大陆国内事务。"
         "同一事件来自不同媒体的素材必须合并成一篇，source_ids列出实际用到的1至5个来源；不同事件不得合并，不得复用素材编号。"
         "国内新闻只选中国大陆的国内政策、社会、经济与公共事务；跨国事件若主要焦点是国际外交则归国际政治。Apple栏目只选苹果公司产品、操作系统、Apple Intelligence、供应链、服务和公司重大动向；消费科技优先选择其他厂商与行业事件，避免跨栏目重复。"
         "每篇summary用100至170字解释已核实的事实，context用100至200字解释背景与影响。"
