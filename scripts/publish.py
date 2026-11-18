@@ -345,7 +345,7 @@ def render(articles):
         r"上涨|下跌|增长|下降|突破|创下|获得|遭到|导致|引发|"
         r"将于|计划|预计|可能)[^，。；！？：]{2,22}"
     )
-    def focus_text(value):
+    def focus_text(value, article_context=None):
         """Only style spans already present in sourced editorial copy; never invent claims."""
         value = str(value)
         spans = []
@@ -384,7 +384,7 @@ def render(articles):
             fragment = esc(value[first:last])
             if kind == "term":
                 result.append('<button type="button" class="term" data-definition="' +
-                              esc(glossary[value[first:last]]) + '" aria-label="解释术语：' +
+                              esc(glossary[value[first:last]] + ("\n\n在这篇新闻中：" + article_context[value[first:last]] if article_context and value[first:last] in article_context else "")) + '" aria-label="解释术语：' +
                               fragment + '">' + fragment + '</button>')
             else:
                 result.append('<strong class="focus-' + kind + '">' + fragment + '</strong>')
@@ -396,6 +396,15 @@ def render(articles):
         headline = a["title"]
         summary = a["summary"].strip()
         context = a["context"].strip()
+        # Derive entity relevance only from sentences already present in the published story.
+        # Do not invent a causal explanation or a new biographical claim.
+        article_context = {}
+        for entity in entities:
+            for sentence in re.split(r"(?<=[。！？])", summary + "。" + context):
+                sentence = sentence.strip()
+                if entity in sentence and 12 <= len(sentence) <= 120:
+                    article_context[entity] = sentence
+                    break
         takeaway = re.split(r"(?<=[。！？])", summary, maxsplit=1)[0].strip()
         if len(takeaway) > 90:
             takeaway = takeaway[:87] + "…"
@@ -407,9 +416,9 @@ def render(articles):
             '<div class="story-meta"><span class="kicker">' + esc(a["category"]) + '</span>'
             '<span class="reading-time">约 ' + str(minutes) + ' 分钟</span></div>'
             '<h2>' + esc(headline) + '</h2>' + photo +
-            '<div class="takeaway"><span class="micro">⚡ 10 秒看懂</span><p>' + focus_text(takeaway) + '</p></div>'
-            '<div class="standard-block"><h3>📌 发生了什么？</h3><p>' + focus_text(summary) + '</p></div>'
-            '<div class="deep-block"><h3>🧩 为什么会这样？</h3><p>' + focus_text(context) + '</p>'
+            '<div class="takeaway"><span class="micro">⚡ 10 秒看懂</span><p>' + focus_text(takeaway, article_context) + '</p></div>'
+            '<div class="standard-block"><h3>📌 发生了什么？</h3><p>' + focus_text(summary, article_context) + '</p></div>'
+            '<div class="deep-block"><h3>🧩 为什么会这样？</h3><p>' + focus_text(context, article_context) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
             '<div class="story-bottom"><a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">核对原始报道：' + esc(a["publisher"]) + ' ↗</a>'
             '<button type="button" class="save" aria-pressed="false" aria-label="收藏这条新闻">☆ 收藏</button></div></article>'
