@@ -14,9 +14,12 @@ from html.parser import HTMLParser
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-CATEGORIES = ("国内新闻", "国际政治", "娱乐文化", "消费科技")
+CATEGORIES = ("国内新闻", "国际政治", "娱乐文化", "消费科技", "Apple")
 STORIES_PER_CATEGORY = 5
 SOURCES = [
+    ("Apple", "MacRumors", "https://feeds.macrumors.com/MacRumors-All"),
+    ("Apple", "9to5Mac", "https://9to5mac.com/feed/"),
+    ("Apple", "AppleInsider", "https://appleinsider.com/rss/news/"),
     ("国内新闻", "中国新闻网·时政", "https://www.chinanews.com.cn/rss/china.xml"),
     ("国内新闻", "中国新闻网·财经", "https://www.chinanews.com.cn/rss/finance.xml"),
     ("国内新闻", "中国新闻网·社会", "https://www.chinanews.com.cn/rss/society.xml"),
@@ -179,7 +182,7 @@ def generate(items):
         "你是严谨的中文新闻编辑。每次只编辑指定的一个栏目，从过去约24小时的RSS素材中选出恰好5个最重要、互不重复的新闻事件，按重要性排序。"
         "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。"
         "同一事件来自不同媒体的素材必须合并成一篇，source_ids列出实际用到的1至5个来源；不同事件不得合并，不得复用素材编号。"
-        "国内新闻只选中国大陆的国内政策、社会、经济与公共事务；跨国事件若主要焦点是国际外交则归国际政治，避免跨栏目重复。"
+        "国内新闻只选中国大陆的国内政策、社会、经济与公共事务；跨国事件若主要焦点是国际外交则归国际政治。Apple栏目只选苹果公司产品、操作系统、Apple Intelligence、供应链、服务和公司重大动向；消费科技优先选择其他厂商与行业事件，避免跨栏目重复。"
         "每篇summary用100至170字解释已核实的事实，context用100至200字解释背景与影响。"
         "区分事实、当事方说法与预测；不编造引语、原因或结果。"
         "entities最多4项，优先冷门但重要的人名、作品、机构、地名；name必须在summary或context中，"
@@ -610,6 +613,11 @@ button,a,[role="tab"]{touch-action:manipulation}
 .category-panel .story,.category-panel .story>*,.category-panel figure{box-sizing:border-box;max-width:100%;min-width:0}
 .category-panel figure img{display:block;max-width:100%;object-fit:contain}
 """
+    style += """/* Five columns fit the phone viewport, with concise mobile labels. */
+.category-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;overflow:hidden!important}
+.category-nav button{box-sizing:border-box!important;min-width:0!important;width:100%!important;overflow:hidden!important;padding:10px 1px!important;font-size:clamp(10px,2.7vw,14px)!important;letter-spacing:-.04em!important}
+@media(max-width:700px){.category-nav #tab-0 .nav-label{font-size:0}.category-nav #tab-0 .nav-label::after{content:"国内";font-size:clamp(11px,3vw,14px)}.category-nav #tab-1 .nav-label{font-size:0}.category-nav #tab-1 .nav-label::after{content:"国际";font-size:clamp(11px,3vw,14px)}.category-nav #tab-2 .nav-label{font-size:0}.category-nav #tab-2 .nav-label::after{content:"文娱";font-size:clamp(11px,3vw,14px)}.category-nav #tab-3 .nav-label{font-size:0}.category-nav #tab-3 .nav-label::after{content:"科技";font-size:clamp(11px,3vw,14px)}.category-nav #tab-4 .nav-label{font-size:clamp(11px,3vw,14px)}}
+"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -689,7 +697,7 @@ rail.addEventListener('touchend',event=>{
 },{passive:true});
 rail.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
 
-const tocDialog=document.querySelector('#toc-dialog');const tocList=tocDialog.querySelector('.toc-list');const tocGroups=[...document.querySelectorAll('.category-panel')];const tocNames=['国内新闻','国际政治','娱乐文化','消费科技'];tocGroups.forEach((panel,categoryIndex)=>{const stories=[...panel.querySelectorAll('.story')];if(!stories.length)return;const group=document.createElement('section');group.className='toc-group';const heading=document.createElement('h3');heading.textContent=tocNames[categoryIndex];group.append(heading);stories.forEach(story=>{const button=document.createElement('button');button.type='button';button.className='toc-item';button.textContent=story.querySelector('h2')?.textContent||'新闻';button.addEventListener('click',()=>{pendingTocJump={category:categoryIndex,story};closeToc()});group.append(button)});tocList.append(group)});let tocLockedY=0,pendingTocJump=null;function openToc(){tocLockedY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-tocLockedY+'px';document.body.style.left='0';document.body.style.right='0';document.body.style.width='100%';tocDialog.showModal()}function closeToc(){tocDialog.close()}tocDialog.addEventListener('close',()=>{document.body.style.position='';document.body.style.top='';document.body.style.left='';document.body.style.right='';document.body.style.width='';window.scrollTo(0,tocLockedY);if(pendingTocJump){const jump=pendingTocJump;pendingTocJump=null;requestAnimationFrame(()=>{goToPanel(jump.category,false);requestAnimationFrame(()=>requestAnimationFrame(()=>jump.story.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'})))})}});document.querySelector('.toc-open').addEventListener('click',openToc);tocDialog.querySelector('.toc-close').addEventListener('click',closeToc);tocDialog.addEventListener('click',e=>{if(e.target===tocDialog)closeToc()});
+const tocDialog=document.querySelector('#toc-dialog');const tocList=tocDialog.querySelector('.toc-list');const tocGroups=[...document.querySelectorAll('.category-panel')];const tocNames=['国内新闻','国际政治','娱乐文化','消费科技','Apple'];tocGroups.forEach((panel,categoryIndex)=>{const stories=[...panel.querySelectorAll('.story')];if(!stories.length)return;const group=document.createElement('section');group.className='toc-group';const heading=document.createElement('h3');heading.textContent=tocNames[categoryIndex];group.append(heading);stories.forEach(story=>{const button=document.createElement('button');button.type='button';button.className='toc-item';button.textContent=story.querySelector('h2')?.textContent||'新闻';button.addEventListener('click',()=>{pendingTocJump={category:categoryIndex,story};closeToc()});group.append(button)});tocList.append(group)});let tocLockedY=0,pendingTocJump=null;function openToc(){tocLockedY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-tocLockedY+'px';document.body.style.left='0';document.body.style.right='0';document.body.style.width='100%';tocDialog.showModal()}function closeToc(){tocDialog.close()}tocDialog.addEventListener('close',()=>{document.body.style.position='';document.body.style.top='';document.body.style.left='';document.body.style.right='';document.body.style.width='';window.scrollTo(0,tocLockedY);if(pendingTocJump){const jump=pendingTocJump;pendingTocJump=null;requestAnimationFrame(()=>{goToPanel(jump.category,false);requestAnimationFrame(()=>requestAnimationFrame(()=>jump.story.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'})))})}});document.querySelector('.toc-open').addEventListener('click',openToc);tocDialog.querySelector('.toc-close').addEventListener('click',closeToc);tocDialog.addEventListener('click',e=>{if(e.target===tocDialog)closeToc()});
 const resizeObserver=new ResizeObserver(()=>syncHeight());panels.forEach(p=>resizeObserver.observe(p));
 window.addEventListener('load',()=>{goToPanel(currentPanel,false)});
 syncHeight();
@@ -730,7 +738,7 @@ def main():
     print("Recent sourced items:", len(items))
     articles = generate(enrich(items))
     if len(articles) != len(CATEGORIES) * STORIES_PER_CATEGORY:
-        raise ValueError("Incomplete edition: expected 20 stories")
+        raise ValueError("Incomplete edition: expected " + str(len(CATEGORIES) * STORIES_PER_CATEGORY) + " stories")
     render(articles)
     print("Published articles:", len(articles))
 
