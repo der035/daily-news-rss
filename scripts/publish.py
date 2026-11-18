@@ -546,6 +546,15 @@ html:has(body.theme-dark),body.theme-dark{background:#0e121b}
 .story>.source-mark{margin:0 0 16px 5px}
 @media(max-width:600px){.story>h2{padding:17px 16px;margin-bottom:16px;border-left-width:4px}}
 """
+    style += """/* Consolidated attribution: one linked publisher mark, optional additional reporting. */
+.source-mark a{display:inline-flex;align-items:center;gap:8px;color:inherit;text-decoration:none;min-height:30px}
+.source-mark a:hover .source-wordmark,.source-mark a:focus-visible .source-wordmark{text-decoration:underline;text-underline-offset:3px}
+.source-mark .source-arrow{width:12px;height:12px;opacity:.65}
+.story figure figcaption{display:none}
+.story-bottom .source-links{display:none}
+.story-bottom .source-links.has-additional{display:flex}
+.story-bottom .source-links.has-additional>span{font-size:11px}
+"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -565,6 +574,21 @@ darkPreference.addEventListener?.('change',()=>{if(savedTheme==='auto')applyThem
 document.querySelectorAll('.share-story').forEach(button=>{button.addEventListener('click',async()=>{const story=button.closest('.story');const title=story.querySelector('h2')?.textContent.trim()||'新闻';const summary=story.querySelector('.standard-block p')?.textContent.trim()||'';const context=story.querySelector('.deep-block>p')?.textContent.trim()||'';const source=story.querySelector('.story-bottom a');const sourceUrl=source?.href||'';const sourceName=source?.textContent.replace(/^核对原始报道：/,'').replace(/\s*↗\s*$/,'').trim()||'';const text=[title,'','发生了什么？',summary,'','背景与影响',context,'','原始报道：'+sourceText,'','—— THE DAILY NOISE · 每日中文新闻简报','https://the-daily-noise.pages.dev/'].join('\n');try{if(navigator.share){await navigator.share({title,text});return}if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);const old=button.innerHTML;button.textContent='已复制分享文本';setTimeout(()=>button.innerHTML=old,1800);return}throw new Error('Clipboard unavailable')}catch(error){if(error?.name==='AbortError')return;try{await navigator.clipboard.writeText(text);const old=button.innerHTML;button.textContent='已复制分享文本';setTimeout(()=>button.innerHTML=old,1800)}catch(e){const box=document.createElement('textarea');box.value=text;box.setAttribute('readonly','');box.style.cssText='position:fixed;left:-9999px';document.body.append(box);box.select();const ok=document.execCommand('copy');box.remove();if(ok){const old=button.innerHTML;button.textContent='已复制分享文本';setTimeout(()=>button.innerHTML=old,1800)}else alert('无法自动分享，请使用浏览器的分享功能')}}})});
 function sourceBadge(publisher){const name=publisher.toLowerCase();let wordmark;if(name.includes('bbc'))wordmark='<span class="source-wordmark bbc"><span>B</span><span>B</span><span>C</span></span>';else if(name.includes('guardian'))wordmark='<span class="source-wordmark guardian">The Guardian</span>';else if(name.includes('variety'))wordmark='<span class="source-wordmark variety">Variety</span>';else if(name.includes('ars technica'))wordmark='<span class="source-wordmark ars">ars technica</span>';else{const el=document.createElement('span');el.className='source-wordmark';el.textContent=publisher;return el.outerHTML}return wordmark}
 document.querySelectorAll('.story').forEach(story=>{const source=story.querySelector('.story-bottom .source-links a, .story-bottom a');if(!source)return;const publisher=source.textContent.replace(/^核对原始报道：/,'').trim();if(!publisher)return;const mark=document.createElement('div');mark.className='source-mark';mark.setAttribute('aria-label','新闻来源：'+publisher);mark.innerHTML='<span class="source-caption">SOURCE</span>'+sourceBadge(publisher);story.querySelector('h2')?.insertAdjacentElement('afterend',mark)});
+/* A source badge is the primary link; do not repeat it below the article. */
+document.querySelectorAll('.story').forEach(story=>{
+ const links=[...story.querySelectorAll('.story-bottom .source-links a')];
+ const mark=story.querySelector('.source-mark');
+ const primary=links[0];
+ if(mark&&primary){
+   const a=document.createElement('a');a.href=primary.href;a.target='_blank';a.rel='noopener noreferrer';a.setAttribute('aria-label','阅读原始报道：'+primary.textContent.trim());
+   while(mark.firstChild)a.append(mark.firstChild);
+   const arrow=document.createElementNS('http://www.w3.org/2000/svg','svg');arrow.setAttribute('class','ui-icon source-arrow');arrow.setAttribute('viewBox','0 0 24 24');arrow.setAttribute('aria-hidden','true');
+   const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d','M7 17 17 7M8 7h9v9');arrow.append(path);a.append(arrow);mark.append(a);
+ }
+ const group=story.querySelector('.story-bottom .source-links');
+ if(group){if(links.length>1){links[0].remove();group.classList.add('has-additional');const label=group.querySelector('span');if(label)label.textContent='其他参考报道：'}else group.remove()}
+ story.querySelectorAll('figure figcaption').forEach(c=>{if(/^图片来源：/.test(c.textContent.trim()))c.remove()});
+});
 const rail=document.querySelector('.category-rail'),tabs=[...document.querySelectorAll('.category-nav button')];
 const panels=[...rail.querySelectorAll('.category-panel')];let currentPanel=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
