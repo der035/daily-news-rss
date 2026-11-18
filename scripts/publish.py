@@ -27,6 +27,11 @@ SOURCES = [
     ("国内新闻", "BBC 中文", "https://feeds.bbci.co.uk/zhongwen/simp/rss.xml"),
     ("国内新闻", "The Guardian China", "https://www.theguardian.com/world/china/rss"),
     ("国内新闻", "SCMP China", "https://www.scmp.com/rss/4/feed"),
+    ("国内新闻", "中国日报·中国", "https://www.chinadaily.com.cn/rss/china_rss.xml"),
+    ("国内新闻", "Google News·财新", "https://news.google.com/rss/search?q=site%3Acaixin.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·第一财经", "https://news.google.com/rss/search?q=site%3Ayicai.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·澎湃新闻", "https://news.google.com/rss/search?q=site%3Athepaper.cn+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
+    ("国内新闻", "Google News·新京报", "https://news.google.com/rss/search?q=site%3Abjnews.com.cn+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
     ("国际政治", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
     ("国际政治", "The Guardian World", "https://www.theguardian.com/world/rss"),
     ("国际政治", "NPR World", "https://feeds.npr.org/1004/rss.xml"),
@@ -165,7 +170,7 @@ def collect():
     selected, per_source, per_category = [], {}, {}
     for item in sorted(items, key=lambda x: x["published"], reverse=True):
         pub, cat = item["publisher"], item["category"]
-        if per_source.get(pub, 0) >= 10 or per_category.get(cat, 0) >= 32:
+        if per_source.get(pub, 0) >= (5 if cat == "国内新闻" else 10) or per_category.get(cat, 0) >= 32:
             continue
         selected.append(item)
         per_source[pub] = per_source.get(pub, 0) + 1
@@ -183,7 +188,7 @@ def generate(items):
     lookup = {item["source_id"]: item for item in numbered}
     instructions = (
         "你是严谨的中文新闻编辑。每次只编辑指定的一个栏目，从过去约24小时的RSS素材中选出恰好5个最重要、互不重复的新闻事件，按重要性排序。"
-        "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。国内新闻应覆盖政策、经济、社会等领域，尽量选择不同独立媒体的事件；外媒报道必须聚焦中国大陆国内事务。"
+        "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。国内新闻应覆盖政策、经济、社会等领域，尽量选择不同独立媒体的事件，五篇新闻尽可能来自至少三家不同媒体；Google News是聚合入口，不代表原始报道媒体；外媒报道必须聚焦中国大陆国内事务。"
         "同一事件来自不同媒体的素材必须合并成一篇，source_ids列出实际用到的1至5个来源；不同事件不得合并，不得复用素材编号。"
         "国内新闻只选中国大陆的国内政策、社会、经济与公共事务；跨国事件若主要焦点是国际外交则归国际政治。Apple栏目只选苹果公司产品、操作系统、Apple Intelligence、供应链、服务和公司重大动向；消费科技优先选择其他厂商与行业事件，避免跨栏目重复。"
         "每篇summary用100至170字解释已核实的事实，context用100至200字解释背景与影响。"
@@ -721,7 +726,7 @@ addEventListener('resize',syncHeight);
             '<button id="tab-0" role="tab" aria-controls="panel-0" aria-selected="true" type="button"><span class="nav-mark nav-domestic" aria-hidden="true"></span><span class="nav-label">国内新闻</span></button>'
             '<button id="tab-1" role="tab" aria-controls="panel-1" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-world" aria-hidden="true"><span></span></span><span class="nav-label">国际政治</span></button>'
             '<button id="tab-2" role="tab" aria-controls="panel-2" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-culture" aria-hidden="true"><span></span></span><span class="nav-label">娱乐文化</span></button>'
-            '<button id="tab-3" role="tab" aria-controls="panel-3" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-tech" aria-hidden="true"><span></span></span><span class="nav-label">消费科技</span></button></nav>'
+            '<button id="tab-3" role="tab" aria-controls="panel-3" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-tech" aria-hidden="true"><span></span></span><span class="nav-label">消费科技</span></button><button id="tab-4" role="tab" aria-controls="panel-4" aria-selected="false" type="button" tabindex="-1" aria-label="Apple 专题"><span class="nav-label">Apple</span></button></nav>'
             '<div class="category-rail">' + sections + '</div>' +
             '<footer>THE DAILY NOISE · 新闻事实请以原始报道为准 · 每日北京时间 08:00 更新（成功生成时） · <button class="type-lab-link" type="button">排版实验室</button> · <button class="feedback-link" type="button">反馈与建议</button></footer>'
             '</main><dialog id="feedback-dialog" class="feedback-dialog" aria-labelledby="feedback-title"><form class="feedback-inner" id="feedback-form"><div class="feedback-head"><h2 id="feedback-title">反馈与建议</h2><button type="button" class="feedback-close" aria-label="关闭反馈">×</button></div><label>反馈类型<select name="kind"><option>内容纠错</option><option>阅读体验</option><option>功能建议</option><option>其他</option></select></label><label>具体内容<textarea name="detail" required maxlength="2500" placeholder="请描述问题或建议，涉及新闻时可附上标题。"></textarea></label><p class="feedback-note">点击下方按钮会前往 GitHub 创建反馈单，需要 GitHub 账号登录并确认提交。本站不会在这一步自动收集或发送文字，请勿填写个人敏感信息。</p><button class="feedback-send" type="submit">前往 GitHub 提交反馈 ↗</button></form></dialog><dialog id="toc-dialog" class="toc-dialog" aria-labelledby="toc-title"><div class="toc-inner"><div class="toc-head"><h2 id="toc-title">跳转到文章</h2><button type="button" class="toc-close" aria-label="关闭目录">×</button></div><div class="toc-list"></div></div></dialog><dialog id="type-lab" class="type-lab" aria-labelledby="type-lab-title"><div class="type-lab-inner"><div class="type-lab-head"><h2 id="type-lab-title">排版实验室</h2><button class="type-lab-close" type="button" aria-label="关闭排版实验室">×</button></div><p>在同一篇新闻中比较三种中文阅读排版。你的选择仅保存在本机，不收集阅读数据。</p><div class="type-lab-options" role="group" aria-label="选择排版方案"><button type="button" data-type="a" aria-pressed="true">A · 苹方正文 + 强语义高亮（默认）</button><button type="button" data-type="b" aria-pressed="false">B · 宋体正文 + 黑体标题</button><button type="button" data-type="c" aria-pressed="false">C · 苹方正文 + 克制高亮</button></div><p class="type-lab-note">比较时尽量使用同一篇文章；可观察阅读舒适度、找重点的速度和理解程度。此功能不是经过随机分组的科学实验。</p></div></dialog><dialog id="term-dialog" class="term-dialog" aria-labelledby="term-title"><div class="term-dialog-inner"><div class="term-dialog-head"><h2 id="term-title"></h2><button class="term-close" type="button" aria-label="关闭解释">×</button></div><p id="term-definition"></p><p class="term-hint">术语速解 · 点击外部或按 Esc 关闭</p></div></dialog><script>' + script + '</script></body></html>')
