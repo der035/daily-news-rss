@@ -30,7 +30,10 @@ jobs:
           assert html.lower().startswith('<!doctype html>')
           root=ET.parse('docs/feed.xml').getroot()
           assert root.tag=='rss'
-          assert 5 <= len(root.findall('./channel/item')) <= 8
+          items=root.findall('./channel/item')
+          assert len(items)==20, f'Expected 20 stories (4 categories × 5), got {len(items)}'
+          assert html.count('class="category-panel"') == 4, 'Expected four category panels'
+          assert html.count('class="story"') == 20, 'Expected twenty article cards'
           PY
       - name: Commit publication
         run: |
