@@ -297,6 +297,44 @@ def render(articles):
         "流媒体": "通过网络连续传输并播放视频或音频内容的服务与技术。",
         "版权": "创作者对作品享有的法定权利，包括复制、传播等，具体范围由法律规定。",
     }
+    # Stable, identity-only explanations: avoid time-sensitive offices, disputed claims or invented biographies.
+    entities = {
+        "特朗普": "唐纳德·特朗普（Donald Trump），美国政治人物、共和党人，曾任及再次担任美国总统。",
+        "拜登": "乔·拜登（Joe Biden），美国民主党政治人物，2021年至2025年担任美国总统。",
+        "习近平": "习近平，中国政治人物，中共中央总书记、中华人民共和国主席。",
+        "普京": "弗拉基米尔·普京（Vladimir Putin），俄罗斯政治人物，长期担任俄罗斯总统或总理。",
+        "泽连斯基": "弗拉基米尔·泽连斯基（Volodymyr Zelenskyy），乌克兰政治人物，2019年当选总统。",
+        "马斯克": "埃隆·马斯克（Elon Musk），企业家，与特斯拉、SpaceX及xAI等企业有关。",
+        "欧盟": "欧洲联盟（EU），由欧洲国家组成的政治与经济联盟；并非单一国家。",
+        "欧洲委员会": "欧洲委员会（Council of Europe），独立于欧盟的国际组织，主要关注人权、民主和法治。",
+        "欧盟委员会": "欧盟委员会（European Commission），欧盟主要执行机构，负责提出立法建议等事务。",
+        "欧洲央行": "欧洲中央银行（ECB），负责欧元区货币政策的中央银行。",
+        "美联储": "美国联邦储备系统（Federal Reserve），美国中央银行体系，负责货币政策等职能。",
+        "白宫": "美国总统的官邸和主要办公场所，也常用来代指美国总统行政团队。",
+        "国会": "立法机构的常见名称；在美国语境中指由众议院和参议院组成的联邦立法机关。",
+        "联合国": "联合国（UN），1945年成立的国际组织，主要处理国际和平、安全、发展与合作事务。",
+        "安理会": "联合国安全理事会，负责维护国际和平与安全；设五个常任理事国。",
+        "北约": "北大西洋公约组织（NATO），以集体防务为核心的跨大西洋政治与军事联盟。",
+        "世贸组织": "世界贸易组织（WTO），制定并管理多边贸易规则、处理成员贸易争端的国际组织。",
+        "国际货币基金组织": "国际货币基金组织（IMF），关注全球货币合作、金融稳定和成员国经济政策的国际组织。",
+        "世界银行": "世界银行（World Bank），主要通过融资与专业支持推动发展及减贫的国际机构。",
+        "英伟达": "NVIDIA，美国半导体企业，主要开发GPU及相关计算软硬件。",
+        "苹果公司": "Apple，美国消费电子及软件服务企业，产品包括iPhone、Mac等。",
+        "谷歌": "Google，美国科技企业，提供搜索、广告、云计算及人工智能等产品和服务。",
+        "微软": "Microsoft，美国科技企业，主要业务涉及软件、云服务与人工智能。",
+        "OpenAI": "OpenAI，人工智能研究与产品开发机构，开发ChatGPT等人工智能系统。",
+        "台积电": "台湾积体电路制造股份有限公司（TSMC），主要从事半导体晶圆代工。",
+        "华纳兄弟": "华纳兄弟（Warner Bros.），美国影视制作与发行品牌。",
+        "乌克兰": "东欧国家，首都基辅；与俄罗斯、波兰等国接壤。",
+        "俄罗斯": "横跨东欧与北亚的国家，首都莫斯科。",
+        "以色列": "位于西亚地中海东岸的国家。",
+        "加沙地带": "位于地中海东岸、与以色列和埃及接壤的巴勒斯坦地区。",
+        "台湾": "位于东亚的岛屿及周边地区；其政治地位涉及两岸争议。",
+        "硅谷": "美国加利福尼亚州旧金山湾区南部的科技产业聚集地，并非行政区。",
+        "华盛顿": "美国首都华盛顿哥伦比亚特区；也常被用于代指美国联邦政府。",
+        "布鲁塞尔": "比利时首都，也是欧盟多家重要机构的所在地。",
+    }
+    glossary.update(entities)
     terms = sorted(glossary, key=len, reverse=True)
     term_pattern = re.compile("|".join(re.escape(t) for t in terms))
     number_pattern = re.compile(r"\d+(?:[.,]\d+)?(?:%|％|年|月|日|人|亿|万|席|票|美元|元)?")
@@ -390,6 +428,7 @@ def render(articles):
     style += """.paper{padding-top:18px}.paper>header{border-bottom:0;padding-bottom:7px;font-size:10px;font-weight:750;color:var(--muted)}.masthead{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:2px solid var(--ink);padding:4px 0 14px}.masthead-brand{display:flex;flex-direction:column;gap:4px;min-width:0}.masthead-name{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(28px,6vw,52px);font-weight:900;line-height:1;letter-spacing:-.045em;white-space:nowrap}.masthead-name em{font-family:Georgia,serif;font-weight:400}.masthead-date{font-size:10px;letter-spacing:.11em;color:var(--muted);font-weight:750}.masthead .theme-toggle{flex:none}.category-nav{margin:12px 0 4px}.category-rail .category-panel>.story:first-child{padding-top:18px}.section-heading,.category-hint,.reader-tools,.reading-guide{display:none!important}@media(max-width:600px){.paper{padding-top:14px}.masthead-name{font-size:clamp(27px,7.5vw,38px)}.category-nav{margin-top:12px}.category-nav button{min-height:50px}.category-rail .category-panel>.story:first-child{padding-top:14px}}"""
     style += """.story p{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;font-size:clamp(17px,1.5vw,19px);font-weight:400;line-height:1.88;letter-spacing:.013em}.story p .focus-lead{font-weight:850;color:var(--ink);font-size:1.045em;letter-spacing:-.012em}.story p .focus-outcome{font-weight:850;color:var(--blue);font-size:1.09em;line-height:1.45;box-decoration-break:clone;-webkit-box-decoration-break:clone}.story p .focus-fact{font-weight:900;color:var(--blue);font-size:1.17em;font-variant-numeric:tabular-nums;letter-spacing:-.025em}.story .takeaway p{font-size:clamp(19px,2.5vw,23px);line-height:1.72;font-weight:550}.story .takeaway .focus-outcome{font-size:1.08em}.story .takeaway .focus-fact{font-size:1.14em}.story .term{font-weight:750;text-decoration-thickness:2px;text-underline-offset:3px}.theme-dark .story p .focus-outcome,.theme-dark .story p .focus-fact{color:#b3c5ff}.theme-dark .story .takeaway .focus-outcome,.theme-dark .story .takeaway .focus-fact{color:#c6d0ff}@media(max-width:600px){.story p{font-size:17px;line-height:1.84;letter-spacing:.008em}.story p .focus-outcome{font-size:1.065em}.story p .focus-fact{font-size:1.12em}}"""
     style += """.type-lab-link{font:inherit;color:var(--blue);border:0;background:none;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}.type-lab{border:0;border-radius:18px;padding:0;max-width:min(92vw,520px);width:100%;background:var(--paper);color:var(--ink);box-shadow:0 22px 65px #0006}.type-lab::backdrop{background:#0009}.type-lab-inner{padding:24px}.type-lab-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.type-lab h2{font-size:22px;margin:0}.type-lab p{font-size:14px;line-height:1.7;color:var(--muted)}.type-lab-options{display:grid;gap:8px;margin:20px 0}.type-lab-options button{padding:13px;text-align:left;background:var(--paper);color:var(--ink);border:2px solid var(--muted);font:inherit;cursor:pointer}.type-lab-options button[aria-pressed=true]{border-color:var(--blue);box-shadow:inset 4px 0 var(--blue);font-weight:800}.type-lab-close{background:transparent;color:var(--ink);border:2px solid var(--ink);font-size:24px;width:40px;height:40px;cursor:pointer}.type-lab-note{font-size:12px!important}.type-b .story p:not(.takeaway p){font-family:'Songti SC','Noto Serif CJK SC','Source Han Serif SC',serif;line-height:1.92;letter-spacing:.006em}.type-b .story h2{font-family:'PingFang SC','Noto Sans CJK SC',sans-serif}.type-c .story p .focus-outcome,.type-c .story p .focus-lead{font-size:1em;font-weight:700;color:var(--ink)}.type-c .story p .focus-fact{font-size:1.035em;font-weight:750;color:var(--blue)}.type-c .story .takeaway p{font-weight:500}.type-c .story .term{font-weight:650}@media(max-width:600px){.type-lab-inner{padding:20px}}"""
+    style += """.story .term{color:var(--blue);border-bottom:1px dashed currentColor;text-decoration:none;cursor:help}.story .term:focus-visible{outline:2px solid var(--blue);outline-offset:3px}.theme-dark .story .term{color:#b3c5ff}"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
