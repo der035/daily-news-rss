@@ -40,6 +40,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           from html.parser import HTMLParser
+          page = Path('docs/index.html').read_text(encoding='utf-8')
           class ScriptCollector(HTMLParser):
               def __init__(self):
                   super().__init__()
