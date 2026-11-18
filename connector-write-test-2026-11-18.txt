@@ -1,0 +1,3 @@
+GitHub connector write test
+Date: 2026-11-18
+Purpose: Verify create and read permissions.
