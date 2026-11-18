@@ -7,6 +7,7 @@ import json
 import os
 import pathlib
 import re
+import time
 import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -265,9 +266,27 @@ def generate(items):
             headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=120) as response:
-            result = json.load(response)
-        return json.loads(result["choices"][0]["message"]["content"])
+        # A model may occasionally return truncated or malformed JSON even in
+        # json_object mode. Retry the *same* editorial request; never publish
+        # guessed/repaired article data.
+        for json_attempt in range(3):
+            with urllib.request.urlopen(req, timeout=120) as response:
+                result = json.load(response)
+            choice = result["choices"][0]
+            content = choice.get("message", {}).get("content", "")
+            try:
+                data = json.loads(content)
+                if not isinstance(data, dict) or not isinstance(data.get("articles"), list):
+                    raise ValueError("Expected JSON object containing articles array")
+                return data
+            except (json.JSONDecodeError, ValueError) as error:
+                print("Invalid model JSON; retry", json_attempt + 1,
+                      "of 3; finish_reason:", choice.get("finish_reason"),
+                      "length:", len(content), "error:", str(error)[:160],
+                      flush=True)
+                if json_attempt == 2:
+                    raise RuntimeError("Model returned invalid article JSON after 3 attempts; previous edition preserved") from error
+                time.sleep(2 * (json_attempt + 1))
 
     # Independent editorial ranking prevents large newsrooms and categories from
     # crowding one another out. Never silently publish fewer than five per tab.
