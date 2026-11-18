@@ -226,15 +226,52 @@ def render(articles):
     esc = lambda x: html.escape(str(x), quote=True)
     cards = []
     for i, a in enumerate(articles, 1):
-        photo = ('<figure><img src="' + esc(a["image"]) + '" alt="' + esc(a["title"]) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if a.get("image") else ""
+        headline = a["title"]
+        summary = a["summary"].strip()
+        context = a["context"].strip()
+        takeaway = re.split(r"(?<=[。！？])", summary, maxsplit=1)[0].strip()
+        if len(takeaway) > 90:
+            takeaway = takeaway[:87] + "…"
+        minutes = max(1, round((len(summary) + len(context)) / 350))
+        image = a.get("image", "")
+        photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
         cards.append(
-            '<article class="story"><span class="kicker">' + str(i).zfill(2) + ' / ' + esc(a["category"]) + '</span>'
-            + '<h2>' + esc(a["title"]) + '</h2>' + photo + '<p>' + esc(a["summary"]) + '</p>'
-            + '<p class="context"><strong>来龙去脉 / </strong>' + esc(a["context"]) + '</p>'
-            + '<a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">来源：' + esc(a["publisher"]) + ' ↗</a></article>'
+            '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
+            '<div class="story-meta"><span class="kicker">' + str(i).zfill(2) + ' / ' + esc(a["category"]) + '</span>'
+            '<span class="reading-time">约 ' + str(minutes) + ' 分钟</span></div>'
+            '<h2>' + esc(headline) + '</h2>' + photo +
+            '<div class="takeaway"><span class="micro">⚡ 10 秒看懂</span><p>' + esc(takeaway) + '</p></div>'
+            '<div class="standard-block"><h3>📌 发生了什么？</h3><p>' + esc(summary) + '</p></div>'
+            '<div class="deep-block"><h3>🧩 为什么会这样？</h3><p>' + esc(context) + '</p>'
+            '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
+            '<div class="story-bottom"><a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">核对原始报道：' + esc(a["publisher"]) + ' ↗</a>'
+            '<button type="button" class="save" aria-pressed="false" aria-label="收藏这条新闻">☆ 收藏</button></div></article>'
         )
-    style = """body{margin:0;background:#0639f5;color:#111;font-family:Arial,'PingFang SC',sans-serif}.paper{max-width:980px;margin:20px auto 60px;background:#f5f3ed;padding:clamp(24px,6vw,70px)}header{border-bottom:4px solid #111;padding-bottom:18px;display:flex;justify-content:space-between;font-size:12px;font-weight:900}h1{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(64px,12vw,148px);line-height:.82;letter-spacing:-.05em;margin:90px 0 28px}h1 em{font-family:Georgia,serif;font-weight:400}.sticker{background:#ff9cce;display:inline-block;padding:12px;transform:rotate(-7deg);border:2px solid} .lede{font-size:21px;font-weight:700;border-bottom:4px solid;padding-bottom:55px}.story{border-bottom:2px solid;padding:38px 0}.kicker{font-size:12px;font-weight:900;background:#ff7e45;padding:7px}.story h2{font-size:clamp(29px,5vw,52px);line-height:1.15}.story p{font-size:17px;line-height:1.85}.story figure{margin:20px 0}.story figure img{display:block;width:100%;max-height:490px;object-fit:cover;background:#ddd}.story figcaption{font-size:12px;color:#555;margin-top:8px}.context{background:#e8e8e4;padding:18px}.story a{color:#0639f5;font-weight:700}footer{padding:30px 0;font-size:13px}@media(max-width:600px){.paper{margin:8px;padding:22px}h1{margin-top:65px}}"""
-    page = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THE DAILY NOISE — '+date+'</title><link rel="alternate" type="application/rss+xml" href="feed.xml"><style>'+style+'</style></head><body><main class="paper"><header><span>THE DAILY NOISE / '+date+'</span><a href="feed.xml">RSS ↗</a></header><h1>THE DAILY<br><em>NOISE.</em></h1><span class="sticker">WORLD NEWS!</span><p class="lede">世界每天都很吵。今天这些事，值得了解。</p>'+''.join(cards)+'<footer>THE DAILY NOISE · 来源链接见各篇文章 · 每日北京时间 08:00 更新（成功生成时）</footer></main></body></html>'
+    style = """*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#0639f5;color:#111;font-family:Arial,'PingFang SC','Microsoft YaHei',sans-serif}.paper{max-width:980px;margin:20px auto 60px;background:#f5f3ed;padding:clamp(24px,6vw,70px)}header{border-bottom:4px solid #111;padding-bottom:18px;display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:900}header a,.story a{color:#0639f5}.hero h1{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(64px,12vw,148px);line-height:.82;letter-spacing:-.05em;margin:80px 0 28px}.hero h1 em{font-family:Georgia,serif;font-weight:400}.sticker{background:#ff9cce;display:inline-block;padding:12px;transform:rotate(-7deg);border:2px solid}.lede{font-size:21px;font-weight:700;padding-bottom:25px}.reader-tools{position:sticky;top:0;z-index:10;background:#f5f3ed;border-top:3px solid;border-bottom:3px solid;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.reader-tools label{font-size:12px;font-weight:900}.modes{display:flex;gap:5px;flex-wrap:wrap}.modes button,.save{border:2px solid #111;background:transparent;color:#111;padding:9px 12px;font-weight:800;cursor:pointer}.modes button[aria-pressed=true]{background:#111;color:#fff}.progress{height:4px;position:sticky;top:0;background:#ddd;z-index:11}.progress span{display:block;height:100%;width:0;background:#ff7e45}.story{border-bottom:3px solid;padding:42px 0;scroll-margin-top:100px}.story-meta,.story-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.kicker{font-size:12px;font-weight:900;background:#ff7e45;padding:7px}.reading-time,.micro,.source-note{font-size:12px;color:#555}.story h2{font-size:clamp(29px,5vw,52px);line-height:1.15;letter-spacing:-.03em}.story h3{font-size:20px;margin:25px 0 8px}.story p{font-size:17px;line-height:1.8}.story figure{margin:20px 0}.story figure img{display:block;width:100%;max-height:490px;object-fit:cover;background:#ddd}.story figcaption{font-size:12px;color:#555;margin-top:8px}.takeaway{background:#ffdfeb;border-left:6px solid #111;padding:18px 20px}.takeaway .micro{font-weight:900;color:#111}.takeaway p{font-weight:800;font-size:20px;line-height:1.5;margin:10px 0 0}.deep-block{background:#e9e9e4;padding:2px 20px 15px;margin:18px 0}.story-bottom{margin-top:22px}.story-bottom a{font-weight:800}.save[aria-pressed=true]{background:#ff9cce}.mode-quick .standard-block,.mode-quick .deep-block,.mode-standard .deep-block{display:none}.reading-guide{font-size:13px;line-height:1.6;color:#555}footer{padding:30px 0;font-size:13px}button:focus-visible,a:focus-visible{outline:4px solid #0639f5;outline-offset:3px}@media(max-width:600px){.paper{margin:8px;padding:22px}.hero h1{margin-top:65px}.reader-tools{top:0}.story{padding:30px 0}.story h2{font-size:32px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}"""
+    script = """(function(){
+const root=document.body,buttons=[...document.querySelectorAll('[data-mode]')];
+function mode(m){if(!['quick','standard','deep'].includes(m))m='standard';root.classList.remove('mode-quick','mode-standard','mode-deep');root.classList.add('mode-'+m);buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)));try{localStorage.setItem('tdn-mode',m)}catch(e){}}
+let stored='standard';try{stored=localStorage.getItem('tdn-mode')||'standard'}catch(e){}mode(stored);
+buttons.forEach(b=>b.addEventListener('click',()=>mode(b.dataset.mode)));
+document.querySelectorAll('.save').forEach(b=>{const id=b.closest('.story').dataset.story;let saved=false;try{saved=localStorage.getItem('tdn-save:'+id)==='1'}catch(e){}function show(){b.setAttribute('aria-pressed',String(saved));b.textContent=saved?'★ 已收藏':'☆ 收藏'}show();b.addEventListener('click',()=>{saved=!saved;try{localStorage.setItem('tdn-save:'+id,saved?'1':'0')}catch(e){}show()})});
+function progress(){const max=document.documentElement.scrollHeight-innerHeight;document.querySelector('.progress span').style.width=(max>0?Math.min(100,scrollY/max*100):100)+'%'}
+addEventListener('scroll',progress,{passive:true});addEventListener('resize',progress);progress();
+})();"""
+    page = ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<meta name="theme-color" content="#0639f5"><title>THE DAILY NOISE — ' + date + '</title>'
+            '<link rel="alternate" type="application/rss+xml" href="feed.xml"><style>' + style + '</style></head>'
+            '<body class="mode-standard"><div class="progress" aria-hidden="true"><span></span></div><main class="paper">'
+            '<header><span>THE DAILY NOISE / ' + date + '</span><a href="feed.xml">RSS ↗</a></header>'
+            '<section class="hero"><h1>THE DAILY<br><em>NOISE.</em></h1><span class="sticker">WORLD NEWS!</span>'
+            '<p class="lede">世界每天都很吵。10 秒抓重点，3 分钟看懂来龙去脉。</p></section>'
+            '<div class="reader-tools"><label>选择阅读密度</label><div class="modes" role="group" aria-label="阅读模式">'
+            '<button type="button" data-mode="quick" aria-pressed="false">⚡ 速览</button>'
+            '<button type="button" data-mode="standard" aria-pressed="true">📖 标准</button>'
+            '<button type="button" data-mode="deep" aria-pressed="false">🧠 深度</button></div></div>'
+            '<p class="reading-guide">可以只看粉色重点卡片；想知道原因，切换到「深度」。收藏会保存在当前浏览器。</p>'
+            + ''.join(cards) +
+            '<footer>THE DAILY NOISE · 新闻事实请以原始报道为准 · 每日北京时间 08:00 更新（成功生成时）</footer>'
+            '</main><script>' + script + '</script></body></html>')
     rss = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(rss, "channel")
     for tag, value in (("title", "THE DAILY NOISE · 世界每天都很吵"), ("link", BASE), ("description", "国际政治、娱乐文化与消费科技中文新闻简报"), ("language", "zh-CN"), ("lastBuildDate", email.utils.format_datetime(now))):
