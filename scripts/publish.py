@@ -22,7 +22,7 @@ SOURCES = [
     ("消费科技", "The Guardian Technology", "https://www.theguardian.com/uk/technology/rss"),
     ("消费科技", "Ars Technica", "https://feeds.arstechnica.com/arstechnica/index"),
 ]
-BASE = "https://der035.github.io/daily-news-rss/"
+BASE = "https://the-daily-noise.pages.dev/"
 UA = "TheDailyNoise/1.0 (+https://github.com/der035/daily-news-rss)"
 def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA})
