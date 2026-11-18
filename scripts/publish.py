@@ -8,6 +8,7 @@ import os
 import pathlib
 import re
 import urllib.request
+import urllib.parse
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 
@@ -29,6 +30,19 @@ def fetch(url):
         return response.read(1500000)
 
 
+def safe_image(url, page_url=""):
+    url = html.unescape((url or "").strip())
+    if url.startswith("//"):
+        url = "https:" + url
+    if page_url:
+        url = urllib.parse.urljoin(page_url, url)
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.hostname in ("localhost", "127.0.0.1"):
+        return ""
+    if parsed.path.lower().endswith((".svg", ".gif")):
+        return ""
+    return url
+
 class ArticleText(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -36,7 +50,13 @@ class ArticleText(HTMLParser):
         self.ignore = 0
         self.current = []
         self.paragraphs = []
+        self.image = ""
     def handle_starttag(self, tag, attrs):
+        if tag == "meta":
+            attr = dict(attrs)
+            if attr.get("property", "").lower() in ("og:image", "og:image:url") or attr.get("name", "").lower() in ("twitter:image", "twitter:image:src"):
+                if not self.image:
+                    self.image = attr.get("content", "")
         if tag in ("script", "style", "nav", "footer", "header", "aside"):
             self.ignore += 1
         if tag == "p" and not self.ignore:
@@ -64,6 +84,7 @@ def enrich(items):
             parser.feed(raw.decode("utf-8", errors="replace"))
             body = "\\n".join(parser.paragraphs)
             item["article_excerpt"] = body[:5000] if len(body) >= 350 else ""
+            item["image"] = safe_image(parser.image, item["url"]) or item.get("image", "")
         except Exception as error:
             print("Article body unavailable:", item["publisher"], type(error).__name__)
             item["article_excerpt"] = ""
@@ -98,8 +119,22 @@ def collect():
                     if now - date > dt.timedelta(hours=48): continue
                 except Exception:
                     continue
+                image_url = ""
+                for name in ("{http://search.yahoo.com/mrss/}content", "{http://search.yahoo.com/mrss/}thumbnail", "enclosure"):
+                    node = entry.find(name)
+                    if node is not None:
+                        candidate = node.attrib.get("url", "")
+                        if name == "enclosure" and not node.attrib.get("type", "").startswith("image/"):
+                            continue
+                        image_url = safe_image(candidate, link)
+                        if image_url:
+                            break
+                if not image_url:
+                    match = re.search(r'<img[^>]+src=["\\\']([^"\\\']+)', field("description", "summary"), re.I)
+                    if match:
+                        image_url = safe_image(match.group(1), link)
                 if title and link.startswith("https://"):
-                    items.append(dict(category=category, publisher=publisher, title=title, url=link, description=description[:600], published=date.isoformat()))
+                    items.append(dict(category=category, publisher=publisher, title=title, url=link, image=image_url, description=description[:600], published=date.isoformat()))
         except Exception as error:
             print("Source unavailable:", publisher, type(error).__name__)
     return sorted(items, key=lambda item: item["published"], reverse=True)[:55]
@@ -148,7 +183,7 @@ def generate(items):
                 "title": a["title"].strip(), "summary": a["summary"].strip(),
                 "context": context, "category": source["category"],
                 "source_url": source["url"], "publisher": source["publisher"],
-                "published": source["published"],
+                "published": source["published"], "image": source.get("image", ""),
             })
         return clean
     messages = [
@@ -191,13 +226,14 @@ def render(articles):
     esc = lambda x: html.escape(str(x), quote=True)
     cards = []
     for i, a in enumerate(articles, 1):
+        photo = ('<figure><img src="' + esc(a["image"]) + '" alt="' + esc(a["title"]) + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display=\\'none\\'"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if a.get("image") else ""
         cards.append(
             '<article class="story"><span class="kicker">' + str(i).zfill(2) + ' / ' + esc(a["category"]) + '</span>'
-            + '<h2>' + esc(a["title"]) + '</h2><p>' + esc(a["summary"]) + '</p>'
+            + '<h2>' + esc(a["title"]) + '</h2>' + photo + '<p>' + esc(a["summary"]) + '</p>'
             + '<p class="context"><strong>来龙去脉 / </strong>' + esc(a["context"]) + '</p>'
             + '<a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">来源：' + esc(a["publisher"]) + ' ↗</a></article>'
         )
-    style = """body{margin:0;background:#0639f5;color:#111;font-family:Arial,'PingFang SC',sans-serif}.paper{max-width:980px;margin:20px auto 60px;background:#f5f3ed;padding:clamp(24px,6vw,70px)}header{border-bottom:4px solid #111;padding-bottom:18px;display:flex;justify-content:space-between;font-size:12px;font-weight:900}h1{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(64px,12vw,148px);line-height:.82;letter-spacing:-.05em;margin:90px 0 28px}h1 em{font-family:Georgia,serif;font-weight:400}.sticker{background:#ff9cce;display:inline-block;padding:12px;transform:rotate(-7deg);border:2px solid} .lede{font-size:21px;font-weight:700;border-bottom:4px solid;padding-bottom:55px}.story{border-bottom:2px solid;padding:38px 0}.kicker{font-size:12px;font-weight:900;background:#ff7e45;padding:7px}.story h2{font-size:clamp(29px,5vw,52px);line-height:1.15}.story p{font-size:17px;line-height:1.85}.context{background:#e8e8e4;padding:18px}.story a{color:#0639f5;font-weight:700}footer{padding:30px 0;font-size:13px}@media(max-width:600px){.paper{margin:8px;padding:22px}h1{margin-top:65px}}"""
+    style = """body{margin:0;background:#0639f5;color:#111;font-family:Arial,'PingFang SC',sans-serif}.paper{max-width:980px;margin:20px auto 60px;background:#f5f3ed;padding:clamp(24px,6vw,70px)}header{border-bottom:4px solid #111;padding-bottom:18px;display:flex;justify-content:space-between;font-size:12px;font-weight:900}h1{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(64px,12vw,148px);line-height:.82;letter-spacing:-.05em;margin:90px 0 28px}h1 em{font-family:Georgia,serif;font-weight:400}.sticker{background:#ff9cce;display:inline-block;padding:12px;transform:rotate(-7deg);border:2px solid} .lede{font-size:21px;font-weight:700;border-bottom:4px solid;padding-bottom:55px}.story{border-bottom:2px solid;padding:38px 0}.kicker{font-size:12px;font-weight:900;background:#ff7e45;padding:7px}.story h2{font-size:clamp(29px,5vw,52px);line-height:1.15}.story p{font-size:17px;line-height:1.85}.story figure{margin:20px 0}.story figure img{display:block;width:100%;max-height:490px;object-fit:cover;background:#ddd}.story figcaption{font-size:12px;color:#555;margin-top:8px}.context{background:#e8e8e4;padding:18px}.story a{color:#0639f5;font-weight:700}footer{padding:30px 0;font-size:13px}@media(max-width:600px){.paper{margin:8px;padding:22px}h1{margin-top:65px}}"""
     page = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THE DAILY NOISE — '+date+'</title><link rel="alternate" type="application/rss+xml" href="feed.xml"><style>'+style+'</style></head><body><main class="paper"><header><span>THE DAILY NOISE / '+date+'</span><a href="feed.xml">RSS ↗</a></header><h1>THE DAILY<br><em>NOISE.</em></h1><span class="sticker">WORLD NEWS!</span><p class="lede">世界每天都很吵。今天这些事，值得了解。</p>'+''.join(cards)+'<footer>THE DAILY NOISE · 来源链接见各篇文章 · 每日北京时间 08:00 更新（成功生成时）</footer></main></body></html>'
     rss = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(rss, "channel")
@@ -205,6 +241,8 @@ def render(articles):
         ET.SubElement(channel, tag).text = value
     for a in articles:
         item = ET.SubElement(channel, "item")
+        if a.get("image"):
+            ET.SubElement(item, "{http://search.yahoo.com/mrss/}content", {"url": a["image"], "medium": "image"})
         for tag, value in (("title", a["title"]), ("link", a["source_url"]), ("guid", a["source_url"]), ("pubDate", email.utils.format_datetime(dt.datetime.fromisoformat(a["published"]))), ("description", a["summary"] + "\n\n来龙去脉：" + a["context"] + "\n来源：" + a["publisher"])):
             node = ET.SubElement(item, tag)
             node.text = value
