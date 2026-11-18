@@ -190,6 +190,7 @@ def generate(items):
         {"role": "system", "content": instructions},
         {"role": "user", "content": json.dumps(numbered, ensure_ascii=False)}
     ]
+    best = []
     for attempt in range(2):
         payload = {
             "model": model, "temperature": 0.2,
@@ -207,6 +208,9 @@ def generate(items):
         raw = result["choices"][0]["message"]["content"]
         data = json.loads(raw)
         clean = validate(data.get("articles", []))
+        if len({a["category"] for a in clean}) > len({a["category"] for a in best}) or (len({a["category"] for a in clean}) == len({a["category"] for a in best}) and len(clean) > len(best)):
+            best = clean
+        print("Coverage:", {category: sum(a["category"] == category for a in clean) for category in ("国际政治", "娱乐文化", "消费科技")})
         if 5 <= len(clean) <= 8 and len({a["category"] for a in clean}) == 3:
             return clean
         print("Attempt", attempt + 1, "failed coverage validation; valid:", len(clean))
@@ -218,7 +222,52 @@ def generate(items):
                 "确保context具体、信息充分，不要编造事实或使用空洞套话。"
             )},
         ])
-    raise ValueError("Could not produce 5-8 distinct source-verified articles across all categories.")
+    # Repair category coverage without discarding already verified articles.
+    # Only ask for one article from a missing category, using that category's original sources.
+    required = ("国际政治", "娱乐文化", "消费科技")
+    for category in required:
+        if any(a["category"] == category for a in best):
+            continue
+        used_urls = {a["source_url"] for a in best}
+        candidates = [
+            item for item in numbered
+            if item["category"] == category and item["url"] not in used_urls
+        ][:12]
+        if not candidates:
+            print("No available sources for missing category:", category)
+            continue
+        print("Repairing missing category:", category, "with", len(candidates), "sources")
+        repair_messages = [
+            {"role": "system", "content": instructions + "本次只写一篇指定栏目的新闻，必须使用提供的source_id，并返回JSON对象articles数组。"},
+            {"role": "user", "content": "请只从以下" + category + "素材中选择一条信息充分的新闻，生成一篇完整的中文新闻，不要引用其他类别：\\n" + json.dumps(candidates, ensure_ascii=False)},
+        ]
+        payload = {
+            "model": model, "temperature": 0.1,
+            "response_format": {"type": "json_object"},
+            "messages": repair_messages,
+        }
+        req = urllib.request.Request(
+            "https://api.deepseek.com/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=100) as response:
+            result = json.load(response)
+        additions = validate(json.loads(result["choices"][0]["message"]["content"]).get("articles", []))
+        additions = [a for a in additions if a["category"] == category and a["source_url"] not in used_urls]
+        if additions:
+            if len(best) >= 8:
+                counts = {c: sum(a["category"] == c for a in best) for c in required}
+                removable = next((i for i in range(len(best) - 1, -1, -1) if counts[best[i]["category"]] > 1), None)
+                if removable is not None:
+                    best.pop(removable)
+            if len(best) < 8:
+                best.append(additions[0])
+    if 5 <= len(best) <= 8 and len({a["category"] for a in best}) == 3:
+        print("Coverage repaired:", {c: sum(a["category"] == c for a in best) for c in required})
+        return best
+    raise ValueError("Cannot publish: category coverage remains incomplete after targeted repair.")
 
 def render(articles):
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
