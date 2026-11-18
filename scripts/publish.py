@@ -471,6 +471,23 @@ def render(articles):
     style += """.share-story{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:9px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;border-radius:6px}.share-story:hover,.share-story:focus-visible{background:var(--soft)}"""
     style += """.toc-open{border-radius:0!important;border:1.5px solid var(--ink)!important;padding:9px 12px!important;min-height:40px}.theme-toggle{border:0!important;border-radius:0!important;background:transparent!important;padding:6px 0!important;min-height:32px!important;font-size:12px;font-weight:700!important;color:var(--muted)!important;display:inline-flex;align-items:center;gap:5px}.theme-toggle:hover,.theme-toggle:focus-visible{color:var(--ink)!important;text-decoration:underline;text-underline-offset:4px}.header-actions{gap:10px}.masthead>.toc-open{flex-shrink:0}.story-bottom a{display:inline-flex;align-items:center;gap:4px}.source-arrow{width:.9em;height:.9em}@media(max-width:600px){.masthead>.toc-open{padding:8px!important;font-size:12px!important}.theme-toggle{font-size:11px}}"""
     style += """header>.header-actions{order:0}header>span:not(.header-actions){order:1}header .theme-toggle{justify-content:flex-start;text-align:left}"""
+    style += """/* Visual audit: unified top baseline, mobile rhythm, touch targets and contrast. */
+.paper>header{display:flex;align-items:center;justify-content:space-between;min-height:38px;padding:0 0 8px;gap:12px;line-height:1.35}
+.paper>header>.header-actions{display:flex;align-items:center;min-height:30px;flex:0 0 auto}
+.paper>header>span:not(.header-actions){display:flex;align-items:center;min-height:30px;text-align:right;font-size:11px;font-weight:750;letter-spacing:.015em;line-height:1.35}
+.paper>header .theme-toggle{display:inline-flex;align-items:center;justify-content:flex-start;min-height:30px!important;gap:6px;padding:4px 0!important;margin:0;line-height:1.35;font-size:11px!important;font-weight:750!important;white-space:nowrap}
+.paper>header .theme-toggle .ui-icon{width:15px;height:15px;vertical-align:0}
+.masthead{align-items:center;gap:16px}
+.masthead-brand{min-width:0}
+.masthead-name{max-width:100%}
+.masthead>.toc-open{flex:0 0 auto;white-space:nowrap;min-height:42px}
+.story h2{overflow-wrap:anywhere;text-wrap:pretty}
+.story figure img{height:auto}
+.story-bottom a{min-width:0;overflow-wrap:anywhere;line-height:1.55}
+.story-bottom .share-story{min-height:42px}
+.term-dialog,.toc-dialog,.type-lab{max-width:calc(100vw - 28px)}
+.term-dialog p{overflow-wrap:anywhere;white-space:pre-line}
+@media(max-width:600px){.paper{padding-left:clamp(18px,5.4vw,26px);padding-right:clamp(18px,5.4vw,26px)}.paper>header{gap:8px}.paper>header>span:not(.header-actions){font-size:10px}.masthead{gap:10px}.masthead-name{font-size:clamp(25px,7.2vw,38px)}.masthead>.toc-open{min-height:40px}.category-nav button{padding-inline:8px}.story h2{font-size:clamp(29px,7.5vw,38px)}.story .takeaway{padding:16px 17px}.story .deep-block{padding:2px 16px 14px}.story-bottom{align-items:flex-start}.toc-inner{padding:18px}}"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
