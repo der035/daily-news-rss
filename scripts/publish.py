@@ -55,7 +55,7 @@ def safe_image(url, page_url=""):
     parsed = urllib.parse.urlparse(url)
     if parsed.scheme != "https" or not parsed.hostname or parsed.hostname in ("localhost", "127.0.0.1"):
         return ""
-    if parsed.path.lower().endswith((".svg", ".gif")):
+    if parsed.path.lower().endswith((".svg", ".gif", ".html", ".htm", ".shtml", ".php", ".asp", ".aspx")) or "/article/" in parsed.path.lower() and not re.search(r"\.(?:jpe?g|png|webp|avif)$", parsed.path, re.I):
         return ""
     return url
 
@@ -93,12 +93,12 @@ class ArticleText(HTMLParser):
 
 def enrich(items):
     """Fetch article pages for additional factual context; never claim full text if blocked."""
-    for item in items[:80]:
+    for item in items:
         try:
             raw = fetch(item["url"])
             parser = ArticleText()
             parser.feed(raw.decode("utf-8", errors="replace"))
-            body = "\\n".join(parser.paragraphs)
+            body = "\n".join(parser.paragraphs)
             item["article_excerpt"] = body[:5000] if len(body) >= 350 else ""
             item["image"] = safe_image(parser.image, item["url"]) or item.get("image", "")
         except Exception as error:
@@ -452,7 +452,7 @@ def render(articles):
         takeaway = re.split(r"(?<=[。！？])", summary, maxsplit=1)[0].strip()
         if len(takeaway) > 90:
             takeaway = takeaway[:87] + "…"
-        image = a.get("image", "")
+        image = safe_image(a.get("image", ""))
         photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
         sources = a.get("sources") or [{"url": a["source_url"], "publisher": a["publisher"]}]
         source_links = ' · '.join(
@@ -581,7 +581,7 @@ button,a,[role="tab"]{touch-action:manipulation}
 .feedback-note{font-size:12px;line-height:1.65;color:var(--muted);margin:0}
 """
     style += """.category-nav{overflow-x:auto;scrollbar-width:none}.category-nav button{flex:1 0 auto;min-width:0}.nav-domestic{border:2px solid currentColor;border-radius:2px;transform:rotate(-5deg)}.nav-domestic::before{content:"";display:block;position:absolute;left:4px;right:4px;top:5px;border-top:2px solid currentColor}.nav-domestic::after{content:"";display:block;position:absolute;left:4px;right:4px;bottom:5px;border-top:2px solid currentColor}@media(max-width:700px){.category-nav button{flex:0 0 auto;min-width:29%;padding:11px 13px}.category-nav{scroll-snap-type:x proximity}.category-nav button{scroll-snap-align:start}}"""
-    script = """(function(){
+    script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
 let lastTerm=null;
