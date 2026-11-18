@@ -152,8 +152,8 @@ def generate(items):
         "你是严谨的中文新闻编辑。素材包含RSS摘要及可能获取到的原文段落article_excerpt。"
         "选择5至8条不同且重要的新闻，国际政治、娱乐文化、消费科技三类都必须有。"
         "优先选择原文材料足够丰富的新闻。每条summary用100至170字解释发生了什么，"
-        "context用100至200字解释有来源支撑的前情、事件机制、意义与影响。"
-        "不要编造历史背景、引语或因果关系，不要使用‘素材仅’‘现有资料不足’等套话。"
+        "context用100至200字写成‘背景与影响’：先解释必要的前情或机制，再交代这件事对谁有什么已经发生或有证据支持的潜在影响。"
+        "不要强行解释原因；没有证据的因果关系、未来预测不得写成事实。不要编造历史背景、引语或因果关系，不要使用‘素材仅’‘现有资料不足’等套话。"
         "材料不足的新闻请跳过。只返回JSON对象，格式为"
         "{\"articles\":[{\"source_id\":\"S1\",\"title\":\"中文标题\","
         "\"summary\":\"事实概述\",\"context\":\"具体背景解读\"}]}。"
@@ -408,17 +408,14 @@ def render(articles):
         takeaway = re.split(r"(?<=[。！？])", summary, maxsplit=1)[0].strip()
         if len(takeaway) > 90:
             takeaway = takeaway[:87] + "…"
-        minutes = max(1, round((len(summary) + len(context)) / 350))
         image = a.get("image", "")
         photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
         cards[a["category"]].append(
             '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
-            '<div class="story-meta"><span class="kicker">' + esc(a["category"]) + '</span>'
-            '<span class="reading-time">约 ' + str(minutes) + ' 分钟</span></div>'
             '<h2>' + esc(headline) + '</h2>' + photo +
             '<div class="takeaway"><span class="micro">⚡ 10 秒看懂</span><p>' + focus_text(takeaway, article_context) + '</p></div>'
-            '<div class="standard-block"><h3>📌 发生了什么？</h3><p>' + focus_text(summary, article_context) + '</p></div>'
-            '<div class="deep-block"><h3>🧩 为什么会这样？</h3><p>' + focus_text(context, article_context) + '</p>'
+            '<div class="standard-block"><h3>发生了什么？</h3><p>' + focus_text(summary, article_context) + '</p></div>'
+            '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
             '<div class="story-bottom"><a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">核对原始报道：' + esc(a["publisher"]) + ' ↗</a>'
             '<button type="button" class="save" aria-pressed="false" aria-label="收藏这条新闻">☆ 收藏</button></div></article>'
@@ -440,6 +437,7 @@ def render(articles):
     style += """.story .term{color:var(--blue);border-bottom:1px dashed currentColor;text-decoration:none;cursor:help}.story .term:focus-visible{outline:2px solid var(--blue);outline-offset:3px}.theme-dark .story .term{color:#b3c5ff}"""
     style += """html{background:#e8e7e3}body{background:#e8e7e3}.paper{margin-top:0}.theme-dark{background:#0e121b}.theme-dark .paper{box-shadow:0 0 0 1px #303643}html:has(body.theme-dark){background:#0e121b}body.theme-dark{background:#0e121b}.header-actions{display:flex;align-items:center;gap:16px}.toc-open{border:0;background:none;color:var(--blue);font:inherit;font-size:12px;font-weight:850;padding:4px 0;cursor:pointer}.toc-dialog{border:0;border-radius:18px;padding:0;width:min(92vw,600px);max-height:min(78dvh,750px);background:var(--paper);color:var(--ink);box-shadow:0 22px 70px #0008}.toc-dialog::backdrop{background:#000a}.toc-inner{padding:22px}.toc-head{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px}.toc-head h2{font-size:22px;margin:0}.toc-close{width:38px;height:38px;border:1px solid var(--ink);background:transparent;color:var(--ink);font-size:24px;cursor:pointer}.toc-group{margin-top:16px}.toc-group h3{font-size:12px;color:var(--muted);letter-spacing:.08em;margin:0 0 6px}.toc-item{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--soft);font:inherit;font-size:15px;font-weight:650;line-height:1.45;padding:12px 3px;cursor:pointer}.toc-item:hover,.toc-item:focus-visible{color:var(--blue)}.story-meta .kicker{background:transparent;color:var(--muted);padding:0;font-size:11px;font-weight:750}.theme-dark .story-meta .kicker{color:var(--muted)}@media(max-width:600px){.paper{margin-top:0}.toc-inner{padding:18px}.header-actions{gap:12px}}"""
     style += """.toc-open{display:inline-flex;align-items:center;gap:8px;font-size:13px!important;font-weight:900!important;color:var(--ink)!important;padding:8px 10px!important;border:1.5px solid var(--ink)!important;border-radius:8px;background:transparent!important;letter-spacing:.01em}.toc-open::before{content:"";width:17px;height:16px;flex:none;background:linear-gradient(var(--ink),var(--ink)) 0 1px/17px 2.5px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 7px/17px 2.5px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 13px/12px 2.5px no-repeat}.toc-open:hover,.toc-open:focus-visible{background:var(--soft)!important}.toc-dialog{overscroll-behavior:contain;overflow:hidden;max-height:min(82dvh,760px)}.toc-inner{max-height:min(82dvh,760px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.toc-head{position:sticky;top:-22px;background:var(--paper);z-index:2}.story-meta .kicker{display:none!important}.story-meta{justify-content:flex-end}.story{scroll-margin-top:18px}@media(max-width:600px){.toc-head{top:-18px}.toc-open{min-height:36px}}"""
+    style += """.story>.story-meta{display:none!important}.story>h2{margin-top:0}.deep-block h3,.standard-block h3{letter-spacing:.015em}"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
