@@ -1,0 +1,38 @@
+name: Publish verified daily digest
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: daily-news-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate sourced digest
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4.1-mini
+        run: python3 scripts/publish.py
+      - name: Validate generated artifacts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          html=Path('docs/index.html').read_text(encoding='utf-8')
+          assert html.lower().startswith('<!doctype html>')
+          root=ET.parse('docs/feed.xml').getroot()
+          assert root.tag=='rss'
+          assert 5 <= len(root.findall('./channel/item')) <= 8
+          PY
+      - name: Commit publication
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html docs/feed.xml
+          git diff --cached --quiet || (git commit -m "Publish daily sourced digest" && git push)
