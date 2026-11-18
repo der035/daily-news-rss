@@ -349,7 +349,7 @@ def generate(items):
         output.extend(category_output)
     return output
 
-def render(articles):
+def render(articles, version):
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
     date = now.strftime("%Y.%m.%d")
     esc = lambda x: html.escape(str(x), quote=True)
@@ -766,7 +766,7 @@ addEventListener('resize',syncHeight);
             '<button id="tab-2" role="tab" aria-controls="panel-2" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-culture" aria-hidden="true"><span></span></span><span class="nav-label">娱乐文化</span></button>'
             '<button id="tab-3" role="tab" aria-controls="panel-3" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-tech" aria-hidden="true"><span></span></span><span class="nav-label">消费科技</span></button><button id="tab-4" role="tab" aria-controls="panel-4" aria-selected="false" type="button" tabindex="-1" aria-label="Apple 专题"><span class="nav-label">APPLE</span></button></nav>'
             '<div class="category-rail">' + sections + '</div>' +
-            '<footer class="site-footer"><div class="footer-main"><span>THE DAILY NOISE · 新闻事实请以原始报道为准</span><button class="feedback-link" type="button">反馈与建议</button></div><div class="footer-signature"><span>EDITED &amp; BUILT BY <strong>AA</strong></span><span class="footer-version">VERSION 1.5.0</span></div><div class="footer-update">每日北京时间 08:00 更新（成功生成时）</div></footer>'
+            '<footer class="site-footer"><div class="footer-main"><span>THE DAILY NOISE · 新闻事实请以原始报道为准</span><button class="feedback-link" type="button">反馈与建议</button></div><div class="footer-signature"><span>EDITED &amp; BUILT BY <strong>AA</strong></span><span class="footer-version">VERSION ' + version + '</span></div><div class="footer-update">每日北京时间 08:00 更新（成功生成时）</div></footer>'
             '</main><dialog id="feedback-dialog" class="feedback-dialog" aria-labelledby="feedback-title"><form class="feedback-inner" id="feedback-form"><div class="feedback-head"><h2 id="feedback-title">反馈与建议</h2><button type="button" class="feedback-close" aria-label="关闭反馈">×</button></div><label>反馈类型<select name="kind"><option>内容纠错</option><option>阅读体验</option><option>功能建议</option><option>其他</option></select></label><label>具体内容<textarea name="detail" required maxlength="2500" placeholder="请描述问题或建议，涉及新闻时可附上标题。"></textarea></label><p class="feedback-note">点击下方按钮会前往 GitHub 创建反馈单，需要 GitHub 账号登录并确认提交。本站不会在这一步自动收集或发送文字，请勿填写个人敏感信息。</p><button class="feedback-send" type="submit">前往 GitHub 提交反馈 ↗</button></form></dialog><dialog id="toc-dialog" class="toc-dialog" aria-labelledby="toc-title"><div class="toc-inner"><div class="toc-head"><h2 id="toc-title">跳转到文章</h2><button type="button" class="toc-close" aria-label="关闭目录">×</button></div><div class="toc-list"></div></div></dialog><dialog id="term-dialog" class="term-dialog" aria-labelledby="term-title"><div class="term-dialog-inner"><div class="term-dialog-head"><h2 id="term-title"></h2><button class="term-close" type="button" aria-label="关闭解释">×</button></div><p id="term-definition"></p><p class="term-hint">术语速解 · 点击外部或按 Esc 关闭</p></div></dialog><script>' + script + '</script></body></html>')
     rss = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(rss, "channel")
@@ -784,14 +784,25 @@ addEventListener('resize',syncHeight);
     (DOCS / "index.html").write_text(page, encoding="utf-8")
     ET.ElementTree(rss).write(DOCS / "feed.xml", encoding="utf-8", xml_declaration=True)
 
+def next_version():
+    """Advance the patch version from the last published HTML edition."""
+    page = DOCS / "index.html"
+    previous = page.read_text(encoding="utf-8") if page.exists() else ""
+    match = re.search(r'class="footer-version">VERSION (\\d+)\\.(\\d+)\\.(\\d+)', previous)
+    if not match:
+        return "1.5.1"  # First release after the original v1.5.0 footer.
+    major, minor, patch = map(int, match.groups())
+    return f"{major}.{minor}.{patch + 1}"
+
 def main():
     items = collect()
     print("Recent sourced items:", len(items))
     articles = generate(enrich(items))
     if len(articles) != len(CATEGORIES) * STORIES_PER_CATEGORY:
         raise ValueError("Incomplete edition: expected " + str(len(CATEGORIES) * STORIES_PER_CATEGORY) + " stories")
-    render(articles)
-    print("Published articles:", len(articles))
+    version = next_version()
+    render(articles, version)
+    print("Published articles:", len(articles), "version:", version)
 
 if __name__ == "__main__":
     main()
