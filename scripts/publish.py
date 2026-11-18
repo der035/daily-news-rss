@@ -602,6 +602,14 @@ button,a,[role="tab"]{touch-action:manipulation}
 .category-panel[hidden]{display:none!important}
 .category-panel .story{max-width:100%;overflow-wrap:anywhere}
 """
+    style += """/* Final isolation: the reader is a single-column document, never a horizontal scroller. */
+.paper{overflow-x:clip!important}
+.category-rail{display:block!important;position:relative!important;overflow-x:clip!important;overflow-y:visible!important;max-width:100%!important;min-width:0!important;scroll-snap-type:none!important;scroll-behavior:auto!important;transform:none!important}
+.category-panel{display:block!important;position:relative!important;left:auto!important;right:auto!important;transform:none!important;box-sizing:border-box!important;min-width:0!important;width:100%!important;max-width:100%!important;overflow-x:clip!important;overflow-y:visible!important}
+.category-panel[hidden],.category-panel[aria-hidden="true"]{display:none!important}
+.category-panel .story,.category-panel .story>*,.category-panel figure{box-sizing:border-box;max-width:100%;min-width:0}
+.category-panel figure img{display:block;max-width:100%;object-fit:contain}
+"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -640,7 +648,7 @@ const feedbackDialog=document.querySelector('#feedback-dialog');document.querySe
 const rail=document.querySelector('.category-rail'),tabs=[...document.querySelectorAll('.category-nav button')];
 const panels=[...rail.querySelectorAll('.category-panel')];let currentPanel=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-function syncHeight(){rail.style.height='auto'}
+function syncHeight(){rail.style.height='auto';if(rail.scrollLeft)rail.scrollLeft=0}
 function goToPanel(index,smooth){
   const i=Math.max(0,Math.min(panels.length-1,index));
   currentPanel=i;
