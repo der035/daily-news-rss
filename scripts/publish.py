@@ -24,6 +24,9 @@ SOURCES = [
     ("国内新闻", "中国新闻网·财经", "https://www.chinanews.com.cn/rss/finance.xml"),
     ("国内新闻", "中国新闻网·社会", "https://www.chinanews.com.cn/rss/society.xml"),
     ("国内新闻", "新华网·时政", "https://www.xinhuanet.com/politics/news_politics.xml"),
+    ("国内新闻", "BBC 中文", "https://feeds.bbci.co.uk/zhongwen/simp/rss.xml"),
+    ("国内新闻", "The Guardian China", "https://www.theguardian.com/world/china/rss"),
+    ("国内新闻", "SCMP China", "https://www.scmp.com/rss/4/feed"),
     ("国际政治", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
     ("国际政治", "The Guardian World", "https://www.theguardian.com/world/rss"),
     ("国际政治", "NPR World", "https://feeds.npr.org/1004/rss.xml"),
@@ -180,7 +183,7 @@ def generate(items):
     lookup = {item["source_id"]: item for item in numbered}
     instructions = (
         "你是严谨的中文新闻编辑。每次只编辑指定的一个栏目，从过去约24小时的RSS素材中选出恰好5个最重要、互不重复的新闻事件，按重要性排序。"
-        "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。"
+        "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。国内新闻应覆盖政策、经济、社会等领域，尽量选择不同独立媒体的事件；外媒报道必须聚焦中国大陆国内事务。"
         "同一事件来自不同媒体的素材必须合并成一篇，source_ids列出实际用到的1至5个来源；不同事件不得合并，不得复用素材编号。"
         "国内新闻只选中国大陆的国内政策、社会、经济与公共事务；跨国事件若主要焦点是国际外交则归国际政治。Apple栏目只选苹果公司产品、操作系统、Apple Intelligence、供应链、服务和公司重大动向；消费科技优先选择其他厂商与行业事件，避免跨栏目重复。"
         "每篇summary用100至170字解释已核实的事实，context用100至200字解释背景与影响。"
@@ -428,9 +431,9 @@ def render(articles):
             result.append(esc(value[cursor:first]))
             fragment = esc(value[first:last])
             if kind == "term":
-                result.append('<button type="button" class="term" data-definition="' +
+                result.append('<span role="button" tabindex="0" class="term" data-definition="' +
                               esc(definitions[value[first:last]] + ("\n\n在这篇新闻中：" + article_context[value[first:last]] if article_context and value[first:last] in article_context else "")) + '" aria-label="解释术语：' +
-                              fragment + '">' + fragment + '</button>')
+                              fragment + '">' + fragment + '</span>')
             else:
                 result.append('<strong class="focus-' + kind + '">' + fragment + '</strong>')
             cursor = last
@@ -618,11 +621,16 @@ button,a,[role="tab"]{touch-action:manipulation}
 .category-nav button{box-sizing:border-box!important;min-width:0!important;width:100%!important;overflow:hidden!important;padding:10px 1px!important;font-size:clamp(10px,2.7vw,14px)!important;letter-spacing:-.04em!important}
 @media(max-width:700px){.category-nav #tab-0 .nav-label{font-size:0}.category-nav #tab-0 .nav-label::after{content:"国内";font-size:clamp(11px,3vw,14px)}.category-nav #tab-1 .nav-label{font-size:0}.category-nav #tab-1 .nav-label::after{content:"国际";font-size:clamp(11px,3vw,14px)}.category-nav #tab-2 .nav-label{font-size:0}.category-nav #tab-2 .nav-label::after{content:"文娱";font-size:clamp(11px,3vw,14px)}.category-nav #tab-3 .nav-label{font-size:0}.category-nav #tab-3 .nav-label::after{content:"科技";font-size:clamp(11px,3vw,14px)}.category-nav #tab-4 .nav-label{font-size:clamp(11px,3vw,14px)}}
 """
+    style += """.story .term{display:inline!important;vertical-align:baseline!important;text-align:inherit!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;font:inherit;font-weight:750;line-height:inherit;cursor:pointer}
+.category-nav button{min-height:38px!important;height:42px!important;padding:5px 1px!important}
+@media(max-width:700px){.category-nav button{height:40px!important;min-height:40px!important;padding:4px 1px!important}}
+"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
 let lastTerm=null;
 document.addEventListener('click',e=>{const term=e.target.closest('.term');if(!term)return;lastTerm=term;document.querySelector('#term-title').textContent=term.textContent;document.querySelector('#term-definition').textContent=term.dataset.definition;glossaryDialog.showModal()});
+document.addEventListener('keydown',e=>{const term=e.target.closest?.('.term');if(term&&(e.key==='Enter'||e.key===' ')){e.preventDefault();term.click()}});
 document.querySelector('.term-close').addEventListener('click',()=>glossaryDialog.close());
 glossaryDialog.addEventListener('click',e=>{if(e.target===glossaryDialog)glossaryDialog.close()});
 glossaryDialog.addEventListener('close',()=>lastTerm?.focus());
