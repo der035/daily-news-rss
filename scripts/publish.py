@@ -157,7 +157,7 @@ def generate(items):
         "为每篇新闻额外选出0至4个读者可能不熟悉、但理解报道很重要的专有名词（优先冷门人物、作品、组织、地区；不要选择特朗普、习近平、普京等广为人知的领导人）。entities是数组，每项包含name、definition、evidence：name必须逐字出现在summary或context，definition为不超过65字的中文释义，evidence必须是原始输入新闻材料中逐字存在、支持释义的至少12字连续片段；没有来源支持就不要提供。每篇最多4个，宁缺毋滥。"
         "材料不足的新闻请跳过。只返回JSON对象，格式为"
         "{\"articles\":[{\"source_id\":\"S1\",\"title\":\"中文标题\","
-        "\"summary\":\"事实概述\",\"context\":\"具体背景解读\"}]}。"
+        "\"summary\":\"事实概述\",\"context\":\"具体背景解读\",\"entities\":[{\"name\":\"专有名词\",\"definition\":\"释义\",\"evidence\":\"原文证据\"}]}]}。"
         "source_id必须直接复制输入素材中的编号，不要输出URL或category，"
         "不要创造编号。标题不超过32字。"
     )
