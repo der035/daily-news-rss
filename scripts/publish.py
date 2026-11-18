@@ -581,6 +581,15 @@ button,a,[role="tab"]{touch-action:manipulation}
 .feedback-note{font-size:12px;line-height:1.65;color:var(--muted);margin:0}
 """
     style += """.category-nav{overflow-x:auto;scrollbar-width:none}.category-nav button{flex:1 0 auto;min-width:0}.nav-domestic{border:2px solid currentColor;border-radius:2px;transform:rotate(-5deg)}.nav-domestic::before{content:"";display:block;position:absolute;left:4px;right:4px;top:5px;border-top:2px solid currentColor}.nav-domestic::after{content:"";display:block;position:absolute;left:4px;right:4px;bottom:5px;border-top:2px solid currentColor}@media(max-width:700px){.category-nav button{flex:0 0 auto;min-width:29%;padding:11px 13px}.category-nav{scroll-snap-type:x proximity}.category-nav button{scroll-snap-align:start}}"""
+    style += """/* Four equal-width editorial tabs; force one complete panel per swipe. */
+.category-nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:0!important;overflow:visible!important;width:100%;padding:0!important;scroll-snap-type:none!important}
+.category-nav button{min-width:0!important;width:100%;min-height:54px;flex:none!important;padding:10px 4px!important;font-size:clamp(10px,2.7vw,15px)!important;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.category-nav button+button{border-left-width:0}
+.category-nav .nav-index,.category-nav .nav-mark{display:none!important}
+.category-rail{scroll-snap-type:x mandatory!important;scroll-padding:0!important;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
+.category-panel{scroll-snap-align:start!important;scroll-snap-stop:always!important}
+@media(max-width:700px){.category-nav{gap:0!important}.category-nav button{min-width:0!important;padding:11px 2px!important;font-size:clamp(10px,2.85vw,13px)!important;letter-spacing:-.025em}}
+"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -626,9 +635,11 @@ function selectTab(i){currentPanel=i;tabs.forEach((b,j)=>{b.setAttribute('aria-s
 function goToPanel(i,smooth){i=Math.max(0,Math.min(panels.length-1,i));clearTimeout(settleTimer);selectTab(i);rail.scrollTo({left:panelLeft(i),behavior:'instant'});requestAnimationFrame(syncHeight)}
 tabs.forEach((b,i)=>{b.addEventListener('click',()=>{goToPanel(i,false);const top=document.querySelector('.category-nav').getBoundingClientRect().top;if(top<0)window.scrollTo({top:window.scrollY+top-12,behavior:reducedMotion.matches?'instant':'smooth'})});b.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const j=(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[j].focus();goToPanel(j,true)}})});
 let settleTimer;
-function settle(){clearTimeout(settleTimer);const i=nearestPanel();if(i!==currentPanel)selectTab(i);syncHeight()}
-rail.addEventListener('scroll',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,160)},{passive:true});
-rail.addEventListener('touchend',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,240)},{passive:true});
+let snapping=false;
+function settle(){clearTimeout(settleTimer);if(snapping)return;const i=nearestPanel();snapping=true;goToPanel(i,false);setTimeout(()=>{snapping=false;syncHeight()},80)}
+rail.addEventListener('scroll',()=>{if(snapping)return;clearTimeout(settleTimer);settleTimer=setTimeout(settle,110)},{passive:true});
+rail.addEventListener('touchend',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,180)},{passive:true});
+rail.addEventListener('scrollend',settle,{passive:true});
 
 const tocDialog=document.querySelector('#toc-dialog');const tocList=tocDialog.querySelector('.toc-list');const tocGroups=[...document.querySelectorAll('.category-panel')];const tocNames=['国内新闻','国际政治','娱乐文化','消费科技'];tocGroups.forEach((panel,categoryIndex)=>{const stories=[...panel.querySelectorAll('.story')];if(!stories.length)return;const group=document.createElement('section');group.className='toc-group';const heading=document.createElement('h3');heading.textContent=tocNames[categoryIndex];group.append(heading);stories.forEach(story=>{const button=document.createElement('button');button.type='button';button.className='toc-item';button.textContent=story.querySelector('h2')?.textContent||'新闻';button.addEventListener('click',()=>{pendingTocJump={category:categoryIndex,story};closeToc()});group.append(button)});tocList.append(group)});let tocLockedY=0,pendingTocJump=null;function openToc(){tocLockedY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-tocLockedY+'px';document.body.style.left='0';document.body.style.right='0';document.body.style.width='100%';tocDialog.showModal()}function closeToc(){tocDialog.close()}tocDialog.addEventListener('close',()=>{document.body.style.position='';document.body.style.top='';document.body.style.left='';document.body.style.right='';document.body.style.width='';window.scrollTo(0,tocLockedY);if(pendingTocJump){const jump=pendingTocJump;pendingTocJump=null;requestAnimationFrame(()=>{goToPanel(jump.category,false);requestAnimationFrame(()=>requestAnimationFrame(()=>jump.story.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'})))})}});document.querySelector('.toc-open').addEventListener('click',openToc);tocDialog.querySelector('.toc-close').addEventListener('click',closeToc);tocDialog.addEventListener('click',e=>{if(e.target===tocDialog)closeToc()});
 const resizeObserver=new ResizeObserver(()=>syncHeight());panels.forEach(p=>resizeObserver.observe(p));
