@@ -35,6 +35,17 @@ jobs:
           assert html.count('class="category-panel"') == 4, 'Expected four category panels'
           assert html.count('class="story"') == 20, 'Expected twenty article cards'
           PY
+      - name: Validate browser JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          page = Path('docs/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>', page)
+          assert scripts, 'Missing inline JavaScript'
+          Path('/tmp/daily-news-inline.js').write_text('\\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/daily-news-inline.js
       - name: Commit publication
         run: |
           git config user.name "github-actions[bot]"
