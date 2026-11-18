@@ -538,6 +538,14 @@ html:has(body.theme-dark),body.theme-dark{background:#0e121b}
 .story>.source-mark{opacity:.78}
 @media(max-width:600px){.story>.source-mark{margin:10px 0 14px}}"""
     style += """.source-links{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;font-size:12px}.source-links>span{color:var(--muted);font-weight:650}.source-links a{display:inline-flex;align-items:center;gap:2px;min-height:30px}.story-bottom{align-items:center}.story>.source-mark{margin-bottom:12px}"""
+    style += """/* Editorial hierarchy: neutral outlined navigation, distinct headline panels. */
+.toc-open,.theme-dark .toc-open{border:1.5px solid var(--ink)!important;color:var(--ink)!important;background:transparent!important}
+.toc-open::before,.theme-dark .toc-open::before{background:linear-gradient(var(--ink),var(--ink)) 0 1px/17px 2.5px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 7px/17px 2.5px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 13px/12px 2.5px no-repeat!important}
+.story>h2{background:#e7ebff;color:#111111;border-left:5px solid #0639f5;padding:19px 20px;margin:0 0 18px;line-height:1.27;box-sizing:border-box}
+.theme-dark .story>h2{background:#202a42;color:var(--ink);border-left-color:#6686ff}
+.story>.source-mark{margin:0 0 16px 5px}
+@media(max-width:600px){.story>h2{padding:17px 16px;margin-bottom:16px;border-left-width:4px}}
+"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
