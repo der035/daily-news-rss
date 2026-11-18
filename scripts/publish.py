@@ -590,6 +590,12 @@ button,a,[role="tab"]{touch-action:manipulation}
 .category-panel{scroll-snap-align:start!important;scroll-snap-stop:always!important}
 @media(max-width:700px){.category-nav{gap:0!important}.category-nav button{min-width:0!important;padding:11px 2px!important;font-size:clamp(10px,2.85vw,13px)!important;letter-spacing:-.025em}}
 """
+    style += """/* Safari: never paint the adjacent category inside the active article. */
+.category-rail{width:100%;max-width:100%;min-width:0;overflow-x:auto!important;overflow-y:hidden!important;clip-path:inset(0 0 0 0);scroll-snap-type:x mandatory!important;scroll-padding-inline:0!important;gap:0!important}
+.category-panel{box-sizing:border-box;flex:0 0 100%!important;width:100%!important;min-width:100%!important;max-width:100%!important;overflow:hidden!important;scroll-snap-align:start!important;scroll-snap-stop:always!important}
+.category-panel .story,.category-panel .takeaway,.category-panel .deep-block{max-width:100%;min-width:0;overflow-wrap:anywhere}
+.category-panel img{max-width:100%;height:auto}
+"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -628,7 +634,7 @@ const feedbackDialog=document.querySelector('#feedback-dialog');document.querySe
 const rail=document.querySelector('.category-rail'),tabs=[...document.querySelectorAll('.category-nav button')];
 const panels=[...rail.querySelectorAll('.category-panel')];let currentPanel=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-function panelLeft(i){return panels[i].offsetLeft-panels[0].offsetLeft}
+function panelLeft(i){return Math.round(i*rail.clientWidth)}
 function nearestPanel(){let best=0,dist=Infinity;panels.forEach((p,i)=>{const d=Math.abs(panelLeft(i)-rail.scrollLeft);if(d<dist){best=i;dist=d}});return best}
 function syncHeight(){const panel=panels[currentPanel];if(panel)rail.style.height=panel.scrollHeight+'px'}
 function selectTab(i){currentPanel=i;tabs.forEach((b,j)=>{b.setAttribute('aria-selected',String(i===j));b.tabIndex=i===j?0:-1});syncHeight()}
