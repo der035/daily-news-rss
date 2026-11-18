@@ -28,7 +28,10 @@ SOURCES = [
     ("国内新闻", "BBC 中文", "https://feeds.bbci.co.uk/zhongwen/simp/rss.xml"),
     ("国内新闻", "The Guardian China", "https://www.theguardian.com/world/china/rss"),
     ("国内新闻", "SCMP China", "https://www.scmp.com/rss/4/feed"),
-    ("国内新闻", "中国日报·中国", "https://www.chinadaily.com.cn/rss/china_rss.xml"),
+    # AnyFeeder catalog: optional mirrors; failures are skipped by collect().
+    ("国内新闻", "AnyFeeder·人民网国内", "https://plink.anyfeeder.com/people/politics"),
+    ("国内新闻", "AnyFeeder·澎湃新闻", "https://plink.anyfeeder.com/thepaper"),
+    ("国内新闻", "AnyFeeder·经济日报", "https://plink.anyfeeder.com/jingjiribao"),
     ("国内新闻", "Google News·财新", "https://news.google.com/rss/search?q=site%3Acaixin.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
     ("国内新闻", "Google News·第一财经", "https://news.google.com/rss/search?q=site%3Ayicai.com+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
     ("国内新闻", "Google News·澎湃新闻", "https://news.google.com/rss/search?q=site%3Athepaper.cn+when%3A1d&hl=zh-CN&gl=CN&ceid=CN%3Azh-Hans"),
@@ -54,6 +57,7 @@ SOURCES = [
     ("消费科技", "Wired", "https://www.wired.com/feed/rss"),
     ("消费科技", "TechCrunch", "https://techcrunch.com/feed/"),
     ("消费科技", "Engadget", "https://www.engadget.com/rss.xml"),
+    ("消费科技", "AnyFeeder·IT之家", "https://plink.anyfeeder.com/ithome/it"),
 ]
 BASE = "https://the-daily-noise.pages.dev/"
 UA = "TheDailyNoise/1.0 (+https://github.com/der035/daily-news-rss)"
