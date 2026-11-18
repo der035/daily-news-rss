@@ -14,7 +14,13 @@ from html.parser import HTMLParser
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
+CATEGORIES = ("国内新闻", "国际政治", "娱乐文化", "消费科技")
+STORIES_PER_CATEGORY = 5
 SOURCES = [
+    ("国内新闻", "中国新闻网·时政", "https://www.chinanews.com.cn/rss/china.xml"),
+    ("国内新闻", "中国新闻网·财经", "https://www.chinanews.com.cn/rss/finance.xml"),
+    ("国内新闻", "中国新闻网·社会", "https://www.chinanews.com.cn/rss/society.xml"),
+    ("国内新闻", "新华网·时政", "https://www.xinhuanet.com/politics/news_politics.xml"),
     ("国际政治", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
     ("国际政治", "The Guardian World", "https://www.theguardian.com/world/rss"),
     ("国际政治", "NPR World", "https://feeds.npr.org/1004/rss.xml"),
@@ -87,7 +93,7 @@ class ArticleText(HTMLParser):
 
 def enrich(items):
     """Fetch article pages for additional factual context; never claim full text if blocked."""
-    for item in items[:55]:
+    for item in items[:80]:
         try:
             raw = fetch(item["url"])
             parser = ArticleText()
@@ -128,7 +134,7 @@ def collect():
                 try:
                     date = email.utils.parsedate_to_datetime(date_text) if not re.match(r"^\d{4}-", date_text) else dt.datetime.fromisoformat(date_text.replace("Z", "+00:00"))
                     if date.tzinfo is None: date = date.replace(tzinfo=dt.timezone.utc)
-                    if now - date > dt.timedelta(hours=48): continue
+                    if date > now + dt.timedelta(minutes=10) or now - date > dt.timedelta(hours=26): continue
                 except Exception:
                     continue
                 image_url = ""
@@ -153,34 +159,36 @@ def collect():
     selected, per_source, per_category = [], {}, {}
     for item in sorted(items, key=lambda x: x["published"], reverse=True):
         pub, cat = item["publisher"], item["category"]
-        if per_source.get(pub, 0) >= 6 or per_category.get(cat, 0) >= 22:
+        if per_source.get(pub, 0) >= 10 or per_category.get(cat, 0) >= 32:
             continue
         selected.append(item)
         per_source[pub] = per_source.get(pub, 0) + 1
         per_category[cat] = per_category.get(cat, 0) + 1
-    return selected[:65]
+    return selected[:110]
 
 def generate(items):
     key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
     if not key:
         raise RuntimeError("DEEPSEEK_API_KEY is missing; keeping previous edition.")
-    if len(items) < 8 or len({i["category"] for i in items}) < 3:
+    if len(items) < 20 or len({i["category"] for i in items}) < len(CATEGORIES):
         raise RuntimeError("Insufficient recent sourced coverage; keeping previous edition.")
     model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
     numbered = [dict(item, source_id="S" + str(i + 1)) for i, item in enumerate(items)]
     lookup = {item["source_id"]: item for item in numbered}
     instructions = (
-        "你是严谨的中文新闻编辑。素材包含RSS摘要及可能获取到的原文段落article_excerpt。"
-        "选择5至8个不同且重要的新闻事件，国际政治、娱乐文化、消费科技三类都必须有。一个事件只能生成一篇文章；同一事件即使有多家媒体、多个角度或连续报道，也必须合并，绝不能按RSS条目分别写。不同事件不能因共享人物、国家或主题而误合并。"
-        "优先选择原文材料足够丰富的新闻。每篇用source_ids数组列出所有实际用于该事件的素材编号（1至5个），按最有代表性的主来源排第一，禁止重复编号或引用无关来源。不同来源有矛盾时明确归属，不能把尚未核实的说法写成共识；补充进展时标明时间顺序。每条summary用100至170字解释发生了什么，"
-        "context用100至200字写成‘背景与影响’：先解释必要的前情或机制，再交代这件事对谁有什么已经发生或有证据支持的潜在影响。"
-        "不要强行解释原因；没有证据的因果关系、未来预测不得写成事实。不要编造历史背景、引语或因果关系，不要使用‘素材仅’‘现有资料不足’等套话。"
-        "为每篇新闻额外选出0至4个读者可能不熟悉、但理解报道很重要的专有名词（优先冷门人物、作品、组织、地区；不要选择特朗普、习近平、普京等广为人知的领导人）。entities是数组，每项包含name、definition、evidence：name必须逐字出现在summary或context，definition为不超过65字的中文释义，evidence必须是原始输入新闻材料中逐字存在、支持释义的至少12字连续片段；没有来源支持就不要提供。每篇最多4个，宁缺毋滥。"
-        "材料不足的新闻请跳过。只返回JSON对象，格式为"
-        "{\"articles\":[{\"source_ids\":[\"S1\",\"S2\"],\"title\":\"中文标题\","
-        "\"summary\":\"事实概述\",\"context\":\"具体背景解读\",\"entities\":[{\"name\":\"专有名词\",\"definition\":\"释义\",\"evidence\":\"原文证据\"}]}]}。"
-        "source_ids必须直接复制输入素材中的编号，不要输出URL或category；同一素材不可被多篇文章重复使用，"
-        "不要创造编号。标题不超过32字。"
+        "你是严谨的中文新闻编辑。每次只编辑指定的一个栏目，从过去约24小时的RSS素材中选出恰好5个最重要、互不重复的新闻事件，按重要性排序。"
+        "优先考虑公共影响范围、重大政策或社会影响、实质性新进展和可核实程度，而非媒体发稿数量、轰动标题或名人热度。"
+        "同一事件来自不同媒体的素材必须合并成一篇，source_ids列出实际用到的1至5个来源；不同事件不得合并，不得复用素材编号。"
+        "国内新闻只选中国大陆的国内政策、社会、经济与公共事务；跨国事件若主要焦点是国际外交则归国际政治，避免跨栏目重复。"
+        "每篇summary用100至170字解释已核实的事实，context用100至200字解释背景与影响。"
+        "区分事实、当事方说法与预测；不编造引语、原因或结果。"
+        "entities最多4项，优先冷门但重要的人名、作品、机构、地名；name必须在summary或context中，"
+        "definition为8至65字中文解释，evidence为输入素材里逐字存在的至少12字连续证据；证据不足不标注。"
+        "只返回JSON对象："
+        "{\\\"articles\\\":[{\\\"source_ids\\\":[\\\"S1\\\",\\\"S2\\\"],\\\"title\\\":\\\"中文标题\\\","
+        "\\\"summary\\\":\\\"事实概述\\\",\\\"context\\\":\\\"背景与影响\\\","
+        "\\\"entities\\\":[{\\\"name\\\":\\\"名词\\\",\\\"definition\\\":\\\"释义\\\",\\\"evidence\\\":\\\"原文连续证据\\\"}]}]}。"
+        "标题不超过32字，不得创造source_ids。"
     )
     def validate(articles):
         clean = []
@@ -237,88 +245,60 @@ def generate(items):
                 "entities": valid_entities,
             })
         return clean
-    messages = [
-        {"role": "system", "content": instructions},
-        {"role": "user", "content": json.dumps(numbered, ensure_ascii=False)}
-    ]
-    best = []
-    for attempt in range(2):
-        payload = {
-            "model": model, "temperature": 0.2,
-            "response_format": {"type": "json_object"},
-            "messages": messages,
-        }
+    def ask(messages):
+        payload = {"model": model, "temperature": 0.15,
+                   "response_format": {"type": "json_object"}, "messages": messages}
         req = urllib.request.Request(
             "https://api.deepseek.com/chat/completions",
-            data=json.dumps(payload).encode("utf-8"),
+            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
             headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=100) as response:
+        with urllib.request.urlopen(req, timeout=120) as response:
             result = json.load(response)
-        raw = result["choices"][0]["message"]["content"]
-        data = json.loads(raw)
-        clean = validate(data.get("articles", []))
-        if len({a["category"] for a in clean}) > len({a["category"] for a in best}) or (len({a["category"] for a in clean}) == len({a["category"] for a in best}) and len(clean) > len(best)):
-            best = clean
-        print("Coverage:", {category: sum(a["category"] == category for a in clean) for category in ("国际政治", "娱乐文化", "消费科技")})
-        if 5 <= len(clean) <= 8 and len({a["category"] for a in clean}) == 3:
-            return clean
-        print("Attempt", attempt + 1, "failed coverage validation; valid:", len(clean))
-        messages.extend([
-            {"role": "assistant", "content": raw},
-            {"role": "user", "content": (
-                "上一版未满足校验。请重新输出5至8条且三大类别均有的文章，"
-                "每篇使用输入中的source_ids数组；同一事件合并为一篇，且不同文章不要重复素材编号。"
-                "确保context具体、信息充分，不要编造事实或使用空洞套话。"
-            )},
-        ])
-    # Repair category coverage without discarding already verified articles.
-    # Only ask for one article from a missing category, using that category's original sources.
-    required = ("国际政治", "娱乐文化", "消费科技")
-    for category in required:
-        if any(a["category"] == category for a in best):
-            continue
-        used_urls = {a["source_url"] for a in best}
-        candidates = [
-            item for item in numbered
-            if item["category"] == category and item["url"] not in used_urls
-        ][:12]
-        if not candidates:
-            print("No available sources for missing category:", category)
-            continue
-        print("Repairing missing category:", category, "with", len(candidates), "sources")
-        repair_messages = [
-            {"role": "system", "content": instructions + "本次只写一篇指定栏目的新闻，必须使用提供的source_ids数组，并返回JSON对象articles数组。"},
-            {"role": "user", "content": "请只从以下" + category + "素材中选择一条信息充分的新闻，生成一篇完整的中文新闻，不要引用其他类别：\\n" + json.dumps(candidates, ensure_ascii=False)},
-        ]
-        payload = {
-            "model": model, "temperature": 0.1,
-            "response_format": {"type": "json_object"},
-            "messages": repair_messages,
-        }
-        req = urllib.request.Request(
-            "https://api.deepseek.com/chat/completions",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=100) as response:
-            result = json.load(response)
-        additions = validate(json.loads(result["choices"][0]["message"]["content"]).get("articles", []))
-        additions = [a for a in additions if a["category"] == category and a["source_url"] not in used_urls]
-        if additions:
-            if len(best) >= 8:
-                counts = {c: sum(a["category"] == c for a in best) for c in required}
-                removable = next((i for i in range(len(best) - 1, -1, -1) if counts[best[i]["category"]] > 1), None)
-                if removable is not None:
-                    best.pop(removable)
-            if len(best) < 8:
-                best.append(additions[0])
-    if 5 <= len(best) <= 8 and len({a["category"] for a in best}) == 3:
-        print("Coverage repaired:", {c: sum(a["category"] == c for a in best) for c in required})
-        return best
-    raise ValueError("Cannot publish: category coverage remains incomplete after targeted repair.")
+        return json.loads(result["choices"][0]["message"]["content"])
+
+    # Independent editorial ranking prevents large newsrooms and categories from
+    # crowding one another out. Never silently publish fewer than five per tab.
+    output = []
+    for category in CATEGORIES:
+        candidates = [item for item in numbered if item["category"] == category][:32]
+        if len(candidates) < STORIES_PER_CATEGORY:
+            raise ValueError("Insufficient fresh stories for " + category)
+        category_output = []
+        for attempt in range(3):
+            used = {src["url"] for article in category_output for src in article["sources"]}
+            remaining = [item for item in candidates if item["url"] not in used]
+            needed = STORIES_PER_CATEGORY - len(category_output)
+            if needed <= 0:
+                break
+            prompt = (
+                "栏目：" + category + "。请选出最重要的" + str(needed) +
+                "个不同事件，按重要性排序；同一事件多来源合并。"
+                "已入选标题（不能重复同一事件）：" +
+                json.dumps([a["title"] for a in category_output], ensure_ascii=False) +
+                "\\n可选素材：" + json.dumps(remaining, ensure_ascii=False)
+            )
+            data = ask([{"role": "system", "content": instructions},
+                        {"role": "user", "content": prompt}])
+            new = validate(data.get("articles", []))
+            used_ids = {src["url"] for article in category_output for src in article["sources"]}
+            for article in new:
+                if article["category"] != category or any(src["url"] in used_ids for src in article["sources"]):
+                    continue
+                # Exact-title guard supplements the editorial duplicate instruction.
+                key_title = re.sub(r"[^\\w\\u4e00-\\u9fff]", "", article["title"])
+                if any(re.sub(r"[^\\w\\u4e00-\\u9fff]", "", old["title"]) == key_title for old in category_output):
+                    continue
+                category_output.append(article)
+                used_ids.update(src["url"] for src in article["sources"])
+                if len(category_output) == STORIES_PER_CATEGORY:
+                    break
+            print("Category", category, "attempt", attempt + 1, "valid", len(category_output))
+        if len(category_output) != STORIES_PER_CATEGORY:
+            raise ValueError("Cannot publish " + category + ": only " + str(len(category_output)) + " verified events")
+        output.extend(category_output)
+    return output
 
 def render(articles):
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
@@ -453,7 +433,7 @@ def render(articles):
             cursor = last
         result.append(esc(value[cursor:]))
         return ''.join(result)
-    cards = {category: [] for category in ("国际政治", "娱乐文化", "消费科技")}
+    cards = {category: [] for category in CATEGORIES}
     for i, a in enumerate(articles, 1):
         headline = a["title"]
         summary = a["summary"].strip()
@@ -491,7 +471,7 @@ def render(articles):
             '<div class="story-bottom"><div class="source-links"><span>核对原始报道：</span>' + source_links + '</div>'
             '<button type="button" class="share-story" aria-label="分享这篇新闻的文字内容"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 14v6h14v-6"/></svg> 分享文章</button></div></article>'
         )
-    category_names = ("国际政治", "娱乐文化", "消费科技")
+    category_names = CATEGORIES
     sections = ''.join(
         '<section class="category-panel" id="panel-' + str(j) + '" aria-labelledby="tab-' + str(j) + '" role="tabpanel">'
         + ''.join(cards[category]) + '</section>'
@@ -600,6 +580,7 @@ button,a,[role="tab"]{touch-action:manipulation}
 .feedback-send{border:2px solid var(--ink);background:#0639f5;color:white;padding:12px;font:inherit;font-weight:800;cursor:pointer}
 .feedback-note{font-size:12px;line-height:1.65;color:var(--muted);margin:0}
 """
+    style += """.category-nav{overflow-x:auto;scrollbar-width:none}.category-nav button{flex:1 0 auto;min-width:0}.nav-domestic{border:2px solid currentColor;border-radius:2px;transform:rotate(-5deg)}.nav-domestic::before{content:"";display:block;position:absolute;left:4px;right:4px;top:5px;border-top:2px solid currentColor}.nav-domestic::after{content:"";display:block;position:absolute;left:4px;right:4px;bottom:5px;border-top:2px solid currentColor}@media(max-width:700px){.category-nav button{flex:0 0 auto;min-width:29%;padding:11px 13px}.category-nav{scroll-snap-type:x proximity}.category-nav button{scroll-snap-align:start}}"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -649,7 +630,7 @@ function settle(){clearTimeout(settleTimer);const i=nearestPanel();if(i!==curren
 rail.addEventListener('scroll',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,160)},{passive:true});
 rail.addEventListener('touchend',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,240)},{passive:true});
 
-const tocDialog=document.querySelector('#toc-dialog');const tocList=tocDialog.querySelector('.toc-list');const tocGroups=[...document.querySelectorAll('.category-panel')];const tocNames=['国际政治','娱乐文化','消费科技'];tocGroups.forEach((panel,categoryIndex)=>{const stories=[...panel.querySelectorAll('.story')];if(!stories.length)return;const group=document.createElement('section');group.className='toc-group';const heading=document.createElement('h3');heading.textContent=tocNames[categoryIndex];group.append(heading);stories.forEach(story=>{const button=document.createElement('button');button.type='button';button.className='toc-item';button.textContent=story.querySelector('h2')?.textContent||'新闻';button.addEventListener('click',()=>{pendingTocJump={category:categoryIndex,story};closeToc()});group.append(button)});tocList.append(group)});let tocLockedY=0,pendingTocJump=null;function openToc(){tocLockedY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-tocLockedY+'px';document.body.style.left='0';document.body.style.right='0';document.body.style.width='100%';tocDialog.showModal()}function closeToc(){tocDialog.close()}tocDialog.addEventListener('close',()=>{document.body.style.position='';document.body.style.top='';document.body.style.left='';document.body.style.right='';document.body.style.width='';window.scrollTo(0,tocLockedY);if(pendingTocJump){const jump=pendingTocJump;pendingTocJump=null;requestAnimationFrame(()=>{goToPanel(jump.category,false);requestAnimationFrame(()=>requestAnimationFrame(()=>jump.story.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'})))})}});document.querySelector('.toc-open').addEventListener('click',openToc);tocDialog.querySelector('.toc-close').addEventListener('click',closeToc);tocDialog.addEventListener('click',e=>{if(e.target===tocDialog)closeToc()});
+const tocDialog=document.querySelector('#toc-dialog');const tocList=tocDialog.querySelector('.toc-list');const tocGroups=[...document.querySelectorAll('.category-panel')];const tocNames=['国内新闻','国际政治','娱乐文化','消费科技'];tocGroups.forEach((panel,categoryIndex)=>{const stories=[...panel.querySelectorAll('.story')];if(!stories.length)return;const group=document.createElement('section');group.className='toc-group';const heading=document.createElement('h3');heading.textContent=tocNames[categoryIndex];group.append(heading);stories.forEach(story=>{const button=document.createElement('button');button.type='button';button.className='toc-item';button.textContent=story.querySelector('h2')?.textContent||'新闻';button.addEventListener('click',()=>{pendingTocJump={category:categoryIndex,story};closeToc()});group.append(button)});tocList.append(group)});let tocLockedY=0,pendingTocJump=null;function openToc(){tocLockedY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-tocLockedY+'px';document.body.style.left='0';document.body.style.right='0';document.body.style.width='100%';tocDialog.showModal()}function closeToc(){tocDialog.close()}tocDialog.addEventListener('close',()=>{document.body.style.position='';document.body.style.top='';document.body.style.left='';document.body.style.right='';document.body.style.width='';window.scrollTo(0,tocLockedY);if(pendingTocJump){const jump=pendingTocJump;pendingTocJump=null;requestAnimationFrame(()=>{goToPanel(jump.category,false);requestAnimationFrame(()=>requestAnimationFrame(()=>jump.story.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'})))})}});document.querySelector('.toc-open').addEventListener('click',openToc);tocDialog.querySelector('.toc-close').addEventListener('click',closeToc);tocDialog.addEventListener('click',e=>{if(e.target===tocDialog)closeToc()});
 const resizeObserver=new ResizeObserver(()=>syncHeight());panels.forEach(p=>resizeObserver.observe(p));
 window.addEventListener('load',()=>{goToPanel(currentPanel,false)});
 syncHeight();
@@ -662,15 +643,16 @@ addEventListener('resize',syncHeight);
             '<header><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button></span><span>独立中文新闻简报</span></header>'
             '<div class="masthead"><div class="masthead-brand"><span class="masthead-name">THE DAILY <em>NOISE.</em></span><span class="masthead-date">' + date + '</span></div><button type="button" class="toc-open" aria-haspopup="dialog" aria-controls="toc-dialog">文章目录</button></div>'
             '<nav class="category-nav" role="tablist" aria-label="新闻栏目">'
-            '<button id="tab-0" role="tab" aria-controls="panel-0" aria-selected="true" type="button"><span class="nav-mark nav-world" aria-hidden="true"><span></span></span><span class="nav-label">国际政治</span><span class="nav-index">01</span></button>'
-            '<button id="tab-1" role="tab" aria-controls="panel-1" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-culture" aria-hidden="true"><span></span></span><span class="nav-label">娱乐文化</span><span class="nav-index">02</span></button>'
-            '<button id="tab-2" role="tab" aria-controls="panel-2" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-tech" aria-hidden="true"><span></span></span><span class="nav-label">消费科技</span><span class="nav-index">03</span></button></nav>'
+            '<button id="tab-0" role="tab" aria-controls="panel-0" aria-selected="true" type="button"><span class="nav-mark nav-domestic" aria-hidden="true"></span><span class="nav-label">国内新闻</span></button>'
+            '<button id="tab-1" role="tab" aria-controls="panel-1" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-world" aria-hidden="true"><span></span></span><span class="nav-label">国际政治</span></button>'
+            '<button id="tab-2" role="tab" aria-controls="panel-2" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-culture" aria-hidden="true"><span></span></span><span class="nav-label">娱乐文化</span></button>'
+            '<button id="tab-3" role="tab" aria-controls="panel-3" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-tech" aria-hidden="true"><span></span></span><span class="nav-label">消费科技</span></button></nav>'
             '<div class="category-rail">' + sections + '</div>' +
             '<footer>THE DAILY NOISE · 新闻事实请以原始报道为准 · 每日北京时间 08:00 更新（成功生成时） · <button class="type-lab-link" type="button">排版实验室</button> · <button class="feedback-link" type="button">反馈与建议</button></footer>'
             '</main><dialog id="feedback-dialog" class="feedback-dialog" aria-labelledby="feedback-title"><form class="feedback-inner" id="feedback-form"><div class="feedback-head"><h2 id="feedback-title">反馈与建议</h2><button type="button" class="feedback-close" aria-label="关闭反馈">×</button></div><label>反馈类型<select name="kind"><option>内容纠错</option><option>阅读体验</option><option>功能建议</option><option>其他</option></select></label><label>具体内容<textarea name="detail" required maxlength="2500" placeholder="请描述问题或建议，涉及新闻时可附上标题。"></textarea></label><p class="feedback-note">点击下方按钮会前往 GitHub 创建反馈单，需要 GitHub 账号登录并确认提交。本站不会在这一步自动收集或发送文字，请勿填写个人敏感信息。</p><button class="feedback-send" type="submit">前往 GitHub 提交反馈 ↗</button></form></dialog><dialog id="toc-dialog" class="toc-dialog" aria-labelledby="toc-title"><div class="toc-inner"><div class="toc-head"><h2 id="toc-title">跳转到文章</h2><button type="button" class="toc-close" aria-label="关闭目录">×</button></div><div class="toc-list"></div></div></dialog><dialog id="type-lab" class="type-lab" aria-labelledby="type-lab-title"><div class="type-lab-inner"><div class="type-lab-head"><h2 id="type-lab-title">排版实验室</h2><button class="type-lab-close" type="button" aria-label="关闭排版实验室">×</button></div><p>在同一篇新闻中比较三种中文阅读排版。你的选择仅保存在本机，不收集阅读数据。</p><div class="type-lab-options" role="group" aria-label="选择排版方案"><button type="button" data-type="a" aria-pressed="true">A · 苹方正文 + 强语义高亮（默认）</button><button type="button" data-type="b" aria-pressed="false">B · 宋体正文 + 黑体标题</button><button type="button" data-type="c" aria-pressed="false">C · 苹方正文 + 克制高亮</button></div><p class="type-lab-note">比较时尽量使用同一篇文章；可观察阅读舒适度、找重点的速度和理解程度。此功能不是经过随机分组的科学实验。</p></div></dialog><dialog id="term-dialog" class="term-dialog" aria-labelledby="term-title"><div class="term-dialog-inner"><div class="term-dialog-head"><h2 id="term-title"></h2><button class="term-close" type="button" aria-label="关闭解释">×</button></div><p id="term-definition"></p><p class="term-hint">术语速解 · 点击外部或按 Esc 关闭</p></div></dialog><script>' + script + '</script></body></html>')
     rss = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(rss, "channel")
-    for tag, value in (("title", "THE DAILY NOISE · 世界每天都很吵"), ("link", BASE), ("description", "国际政治、娱乐文化与消费科技中文新闻简报"), ("language", "zh-CN"), ("lastBuildDate", email.utils.format_datetime(now))):
+    for tag, value in (("title", "THE DAILY NOISE · 世界每天都很吵"), ("link", BASE), ("description", "国内新闻、国际政治、娱乐文化与消费科技中文新闻简报"), ("language", "zh-CN"), ("lastBuildDate", email.utils.format_datetime(now))):
         ET.SubElement(channel, tag).text = value
     for a in articles:
         item = ET.SubElement(channel, "item")
@@ -688,7 +670,7 @@ def main():
     items = collect()
     print("Recent sourced items:", len(items))
     articles = generate(enrich(items))
-    render(articles)
+    if len(articles) != len(CATEGORIES) * STORIES_PER_CATEGORY:\n        raise ValueError("Incomplete edition: expected 20 stories")\n    render(articles)
     print("Published articles:", len(articles))
 
 if __name__ == "__main__":
