@@ -1,16 +1,11 @@
-from pathlib import Path
-import html
-p=Path('docs')
-p.mkdir(exist_ok=True)
-old=p/'feed.xml'
-if old.exists(): old.write_text(html.unescape(old.read_text()),encoding='utf-8')
-tag=lambda s:'&lt;'+s+'&gt;'
-page='&lt;!doctype html&gt;'+tag('html lang="zh-CN"')+tag('head')+tag('meta charset="utf-8"')+tag('meta name="viewport" content="width=device-width,initial-scale=1"')+tag('title')+'THE DAILY NOISE.'+tag('/title')+tag('style')+'body{margin:0;background:#0639f5;font-family:Arial,sans-serif;color:#111}.frame{max-width:1100px;margin:30px auto;background:#f2f2f0;padding:7%;min-height:80vh}.hero{text-align:center;padding:80px 0}h1{font-size:clamp(60px,11vw,140px);line-height:.9;letter-spacing:-.06em;margin:15px 0;font-weight:900}em{font-family:Georgia,serif;font-weight:normal}.label{background:#ff9edb;padding:12px;display:inline-block;transform:rotate(-8deg)}h2{font-size:40px;border-top:3px solid;padding-top:24px}p{line-height:1.8}a{color:#0639f5}' +tag('/style')+tag('/head')+tag('body')+tag('main class="frame"')+tag('small')+'THE DAILY NOISE / POLITICS CULTURE TECH'+tag('/small')+tag('section class="hero"')+tag('strong class="label"')+'WORLD NEWS!'+tag('/strong')+tag('h1')+'THE DAILY'+tag('br')+tag('em')+'NOISE.'+tag('/em')+tag('/h1')+tag('p')+'世界每天都很吵。我们把复杂的来龙去脉讲清楚。'+tag('/p')+tag('/section')+tag('h2')+'世界今天，值得了解的事。'+tag('/h2')+tag('p')+'设计预览：自动新闻更新尚未接入。'+tag('/p')+tag('h2')+'01 / 国际政治'+tag('/h2')+tag('h2')+'02 / 娱乐文化'+tag('/h2')+tag('h2')+'03 / 消费科技'+tag('/h2')+tag('a href="feed.xml"')+'订阅 RSS ↗'+tag('/a')+tag('/main')+tag('/body')+tag('/html')
-(p/'index.html').write_text(page,encoding='utf-8')
-PY
-      - name: Commit generated site
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add docs/index.html docs/feed.xml
-          git diff --cached --quiet || (git commit -m 'Repair valid site HTML and RSS' && git push)
+name: Site repair
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo 'Site repair workflow ready'
