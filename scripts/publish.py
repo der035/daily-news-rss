@@ -300,40 +300,58 @@ def render(articles):
     terms = sorted(glossary, key=len, reverse=True)
     term_pattern = re.compile("|".join(re.escape(t) for t in terms))
     number_pattern = re.compile(r"\d+(?:[.,]\d+)?(?:%|％|年|月|日|人|亿|万|席|票|美元|元)?")
+    # Conservative semantic cues: emphasize a short outcome, never infer causality.
+    outcome_pattern = re.compile(
+        r"(?:宣布|确认|通过|否决|批准|达成|签署|赢得|击败|当选|辞职|下台|"
+        r"发布|推出|上线|收购|裁员|停产|召回|起诉|判处|禁止|取消|"
+        r"上涨|下跌|增长|下降|突破|创下|获得|遭到|导致|引发|"
+        r"将于|计划|预计|可能)[^，。；！？：]{2,22}"
+    )
     def focus_text(value):
-        """Highlight a short lead and measurable facts; annotate only verified glossary terms."""
+        """Only style spans already present in sourced editorial copy; never invent claims."""
         value = str(value)
-        fragments = []
-        pos = 0
+        spans = []
+        occupied = [False] * len(value)
+        def mark(start, end, kind):
+            if start >= end or any(occupied[start:end]):
+                return
+            spans.append((start, end, kind))
+            for j in range(start, end):
+                occupied[j] = True
+
+        # Definitions take precedence; no automatic AI-generated definitions.
         for match in term_pattern.finditer(value):
-            fragments.append(("text", value[pos:match.start()], pos))
-            fragments.append(("term", match.group(), match.start()))
-            pos = match.end()
-        fragments.append(("text", value[pos:], pos))
+            mark(match.start(), match.end(), "term")
+        # Facts and outcomes should be noticeable without painting entire paragraphs.
+        for match in number_pattern.finditer(value):
+            mark(match.start(), match.end(), "fact")
+        for match in outcome_pattern.finditer(value):
+            if len(match.group()) <= 24:
+                mark(match.start(), match.end(), "outcome")
+        # Lead emphasis is limited to the opening subject phrase, not the whole sentence.
+        opening = re.match(r"[^，。；！？：]{4,36}", value)
+        if opening:
+            lead = opening.group()
+            boundary = re.search(r"(?:宣布|确认|通过|否决|批准|赢得|击败|当选|"
+                                 r"发布|推出|收购|裁员|上涨|下跌|增长|下降|导致|引发|"
+                                 r"将于|计划|预计|可能)", lead)
+            lead_end = boundary.start() if boundary else min(len(lead), 12)
+            if 4 <= lead_end <= 16:
+                mark(0, lead_end, "lead")
+
         result = []
-        for kind, fragment, offset in fragments:
+        cursor = 0
+        for first, last, kind in sorted(spans):
+            result.append(esc(value[cursor:first]))
+            fragment = esc(value[first:last])
             if kind == "term":
-                term = fragment
                 result.append('<button type="button" class="term" data-definition="' +
-                              esc(glossary[term]) + '" aria-label="解释术语：' + esc(term) + '">' +
-                              esc(term) + '</button>')
-                continue
-            cursor = 0
-            for m in number_pattern.finditer(fragment):
-                before = fragment[cursor:m.start()]
-                result.append('<strong class="focus-lead">' + esc(before) + '</strong>'
-                              if offset + cursor == 0 and before and len(before) <= 22 else esc(before))
-                result.append('<strong class="focus-fact">' + esc(m.group()) + '</strong>')
-                cursor = m.end()
-            tail = fragment[cursor:]
-            if offset == 0 and cursor == 0 and tail:
-                first_clause = re.split(r"[，。；！？：]", tail, maxsplit=1)[0]
-                if 4 <= len(first_clause) <= 25:
-                    result.append('<strong class="focus-lead">' + esc(first_clause) + '</strong>' + esc(tail[len(first_clause):]))
-                else:
-                    result.append(esc(tail))
+                              esc(glossary[value[first:last]]) + '" aria-label="解释术语：' +
+                              fragment + '">' + fragment + '</button>')
             else:
-                result.append(esc(tail))
+                result.append('<strong class="focus-' + kind + '">' + fragment + '</strong>')
+            cursor = last
+        result.append(esc(value[cursor:]))
         return ''.join(result)
     cards = {category: [] for category in ("国际政治", "娱乐文化", "消费科技")}
     for i, a in enumerate(articles, 1):
@@ -369,7 +387,7 @@ def render(articles):
     style = """*{box-sizing:border-box}html{scroll-behavior:smooth;background:#0639f5}body{margin:0;background:#0639f5;color:#111;font-family:Arial,'PingFang SC','Microsoft YaHei',sans-serif}.paper{max-width:980px;margin:20px auto 60px;background:#f5f3ed;padding:clamp(24px,6vw,70px)}header{border-bottom:4px solid #111;padding-bottom:18px;display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:900}header a,.story a{color:#0639f5}.hero h1{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(64px,12vw,148px);line-height:.82;letter-spacing:-.05em;margin:80px 0 28px}.hero h1 em{font-family:Georgia,serif;font-weight:400}.sticker{background:#ff9cce;display:inline-block;padding:12px;transform:rotate(-7deg);border:2px solid}.lede{font-size:21px;font-weight:700;padding-bottom:25px}.reader-tools{position:relative;top:auto;z-index:10;background:#f5f3ed;border-top:3px solid;border-bottom:3px solid;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.reader-tools label{font-size:12px;font-weight:900}.modes{display:flex;gap:5px;flex-wrap:wrap}.modes button,.save{border:2px solid #111;background:transparent;color:#111;padding:9px 12px;font-weight:800;cursor:pointer}.modes button[aria-pressed=true]{background:#111;color:#fff}.progress{height:4px;position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;background:#ddd;z-index:11}.progress span{display:block;height:100%;width:0;background:#ff7e45}.story{border-bottom:3px solid;padding:42px 0;scroll-margin-top:100px}.story-meta,.story-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.kicker{font-size:12px;font-weight:900;background:#ff7e45;padding:7px}.reading-time,.micro,.source-note{font-size:12px;color:#555}.story h2{font-size:clamp(29px,5vw,52px);line-height:1.15;letter-spacing:-.03em}.story h3{font-size:20px;margin:25px 0 8px}.story p{font-size:17px;line-height:1.8}.story figure{margin:20px 0}.story figure img{display:block;width:100%;max-height:490px;object-fit:cover;background:#ddd}.story figcaption{font-size:12px;color:#555;margin-top:8px}.takeaway{background:#ffdfeb;border-left:6px solid #111;padding:18px 20px}.takeaway .micro{font-weight:900;color:#111}.takeaway p{font-weight:800;font-size:20px;line-height:1.5;margin:10px 0 0}.deep-block{background:#e9e9e4;padding:2px 20px 15px;margin:18px 0}.story-bottom{margin-top:22px}.story-bottom a{font-weight:800}.save[aria-pressed=true]{background:#ff9cce}.mode-quick .standard-block,.mode-quick .deep-block,.mode-standard .deep-block{display:none}.reading-guide{font-size:13px;line-height:1.6;color:#555}footer{padding:30px 0;font-size:13px}button:focus-visible,a:focus-visible{outline:4px solid #0639f5;outline-offset:3px}@media(max-width:600px){.paper{margin:8px;padding:22px}.hero h1{margin-top:65px}.reader-tools{top:auto}.story{padding:30px 0}.story h2{font-size:32px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}"""
     style += """.category-nav{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:20px 0 12px;padding:4px 0 10px}.category-nav::-webkit-scrollbar{display:none}.category-nav button{flex:1 0 auto;min-height:48px;border:2px solid #111;background:#f5f3ed;color:#111;font-size:15px;font-weight:850;padding:10px 14px;cursor:pointer}.category-nav button[aria-selected=true]{background:#0639f5;color:#fff}.category-rail{display:flex;align-items:flex-start;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;gap:0;touch-action:pan-x pan-y}.category-rail::-webkit-scrollbar{display:none}.category-panel{flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:normal}.section-heading{border-bottom:4px solid #111;padding:20px 0 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:12px}.section-heading h2{font-family:Georgia,'Songti SC','Noto Serif CJK SC',serif;font-size:clamp(30px,5vw,44px);margin:0;font-weight:800}.section-index,.section-heading>span:last-child{font-size:11px;font-weight:900;letter-spacing:.07em}.story h2{font-family:'PingFang SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;font-weight:800;line-height:1.27;letter-spacing:-.015em}.story p{font-family:'PingFang SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;font-size:18px;line-height:1.85;font-weight:400;letter-spacing:.012em;overflow-wrap:anywhere}.story .takeaway p{font-size:clamp(19px,3.6vw,23px);line-height:1.62;font-weight:750}.story h3{font-family:'PingFang SC','Noto Sans CJK SC',sans-serif;font-weight:800;font-size:21px}.reading-guide{font-size:14px}.story .source-note{font-size:12px}.category-hint{font-size:12px;font-weight:700;color:#555}@media(max-width:600px){.category-nav button{font-size:14px;padding:10px 12px}.story p{font-size:17px;line-height:1.85}.story h2{font-size:30px;line-height:1.3}}@media(prefers-reduced-motion:reduce){.category-rail{scroll-behavior:auto}}"""
     style += """:root{color-scheme:light;--paper:#f5f3ed;--ink:#111;--muted:#555;--blue:#0639f5;--pink:#ffdfeb;--soft:#e9e9e4;--accent:#ff7e45}body{color:var(--ink)}.paper,.reader-tools{background:var(--paper)}.story a,header a{color:var(--blue)}.reading-time,.micro,.source-note,.category-hint,.reading-guide{color:var(--muted)}.takeaway{background:var(--pink);border-left-color:var(--ink)}.deep-block{background:var(--soft)}.kicker{background:var(--accent);color:#111}.category-nav button{background:var(--paper);color:var(--ink);border-color:var(--ink)}.category-nav button[aria-selected=true]{background:var(--blue);color:#fff}.modes button,.save{color:var(--ink);border-color:var(--ink)}.modes button[aria-pressed=true]{background:var(--ink);color:var(--paper)}.story,.section-heading,header,.reader-tools{border-color:var(--ink)}.focus-lead{font-weight:800;color:var(--ink)}.focus-fact{font-weight:800;color:var(--blue);font-size:1.045em}.takeaway .focus-fact{color:#0639f5}.story p{font-weight:400}.story p strong{letter-spacing:0}.theme-toggle{border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-weight:800;min-height:42px;padding:8px 12px;cursor:pointer}.reading-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}.reading-progress{height:5px;background:var(--soft);margin:12px 0 0;overflow:hidden}.reading-progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .1s linear}.progress{display:none!important}.category-rail{transition:height .18s ease;overflow-y:hidden}.category-panel{align-self:flex-start}.theme-dark{--paper:#171b25;--ink:#f4f1e8;--muted:#b9c1d0;--blue:#9fb4ff;--pink:#392b43;--soft:#252c39;--accent:#ff9c79;background:#0b1020;color-scheme:dark}.theme-dark .paper,.theme-dark .reader-tools{background:var(--paper)}.theme-dark .takeaway .micro{color:var(--ink)}.theme-dark .takeaway .focus-fact{color:#c6d0ff}.theme-dark .category-nav button[aria-selected=true]{background:#9fb4ff;color:#10131d}.theme-dark .modes button[aria-pressed=true]{background:#f4f1e8;color:#171b25}.theme-dark .save[aria-pressed=true]{background:#59405b}.theme-dark .story figure img{background:#343c4a}.theme-dark .sticker{color:#111}.theme-dark .kicker{color:#111}@media(prefers-reduced-motion:reduce){.category-rail{transition:none}.reading-progress span{transition:none}}"""
-    style += """.term{display:inline;color:inherit;background:transparent;border:0;border-bottom:2px dotted var(--blue);padding:0 1px;font:inherit;font-weight:750;cursor:pointer;text-decoration:none;vertical-align:baseline}.term:focus-visible{outline:3px solid var(--blue);outline-offset:2px}.term-dialog{border:0;border-radius:22px;padding:0;max-width:min(90vw,520px);width:100%;box-shadow:0 24px 70px #0005;background:var(--paper);color:var(--ink)}.term-dialog::backdrop{background:#0009}.term-dialog-inner{padding:26px 26px 30px}.term-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.term-dialog h2{font-size:24px;margin:0;font-weight:850}.term-dialog p{font-size:17px;line-height:1.75;margin:18px 0 0}.term-close{border:2px solid var(--ink);background:transparent;color:var(--ink);font-size:24px;width:44px;height:44px;cursor:pointer}.term-dialog .term-hint{font-size:12px;color:var(--muted);margin-top:18px}.focus-lead{font-weight:800}.focus-fact{font-weight:850}@media(prefers-reduced-motion:reduce){.term-dialog{scroll-behavior:auto}}"""
+    style += """.term{display:inline;color:inherit;background:transparent;border:0;border-bottom:2px dotted var(--blue);padding:0 1px;font:inherit;font-weight:750;cursor:pointer;text-decoration:none;vertical-align:baseline}.term:focus-visible{outline:3px solid var(--blue);outline-offset:2px}.term-dialog{border:0;border-radius:22px;padding:0;max-width:min(90vw,520px);width:100%;box-shadow:0 24px 70px #0005;background:var(--paper);color:var(--ink)}.term-dialog::backdrop{background:#0009}.term-dialog-inner{padding:26px 26px 30px}.term-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.term-dialog h2{font-size:24px;margin:0;font-weight:850}.term-dialog p{font-size:17px;line-height:1.75;margin:18px 0 0}.term-close{border:2px solid var(--ink);background:transparent;color:var(--ink);font-size:24px;width:44px;height:44px;cursor:pointer}.term-dialog .term-hint{font-size:12px;color:var(--muted);margin-top:18px}.focus-lead{font-weight:800}.focus-fact{font-weight:850}.focus-outcome{font-weight:800;color:var(--blue)}.takeaway .focus-outcome{color:#0639f5}.theme-dark .takeaway .focus-outcome{color:#c6d0ff}@media(prefers-reduced-motion:reduce){.term-dialog{scroll-behavior:auto}}"""
     script = """(function(){
 const root=document.body,buttons=[...document.querySelectorAll('[data-mode]')];
 const glossaryDialog=document.querySelector('#term-dialog');
