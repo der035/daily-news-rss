@@ -111,51 +111,79 @@ def generate(items):
     if len(items) < 8 or len({i["category"] for i in items}) < 3:
         raise RuntimeError("Insufficient recent sourced coverage; keeping previous edition.")
     model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+    numbered = [dict(item, source_id="S" + str(i + 1)) for i, item in enumerate(items)]
+    lookup = {item["source_id"]: item for item in numbered}
     instructions = (
-        "你是中文深度新闻编辑。输入包含RSS标题、摘要及可能成功提取的文章段落article_excerpt。"
-        "选择5至8条重要新闻，三类均覆盖。优先选择有足够正文、可解释前因后果的报道。"
-        "每条标题不超过32字，summary用100至170字说明发生什么，context用100至200字解释具体背景："
-        "包括已知前情、事件机制、为何重要及可能影响，优先使用正文提供的可核实细节。"
-        "绝对不要写‘素材仅’‘现有资料不足’‘未说明’等编辑过程套话；也不要凭空编造历史、原因、人物或影响。"
-        "如果某篇报道没有足够材料写出有信息量的背景，直接跳过它并选另一篇。"
-        "将事实与预测区分开；推测须使用‘可能’等措辞，且必须有来源支持。"
-        "只输出JSON对象，含articles数组；每条有category,title,summary,context,source_url。"
-        "source_url必须与输入URL完全相同，category必须与输入相同。"
+        "你是严谨的中文新闻编辑。素材包含RSS摘要及可能获取到的原文段落article_excerpt。"
+        "选择5至8条不同且重要的新闻，国际政治、娱乐文化、消费科技三类都必须有。"
+        "优先选择原文材料足够丰富的新闻。每条summary用100至170字解释发生了什么，"
+        "context用100至200字解释有来源支撑的前情、事件机制、意义与影响。"
+        "不要编造历史背景、引语或因果关系，不要使用‘素材仅’‘现有资料不足’等套话。"
+        "材料不足的新闻请跳过。只返回JSON对象，格式为"
+        "{\"articles\":[{\"source_id\":\"S1\",\"title\":\"中文标题\","
+        "\"summary\":\"事实概述\",\"context\":\"具体背景解读\"}]}。"
+        "source_id必须直接复制输入素材中的编号，不要输出URL或category，"
+        "不要创造编号。标题不超过32字。"
     )
-    payload = {
-        "model": model,
-        "temperature": 0.2,
-        "response_format": {"type": "json_object"},
-        "messages": [
-            {"role": "system", "content": instructions},
-            {"role": "user", "content": json.dumps(items, ensure_ascii=False)}
-        ]
-    }
-    req = urllib.request.Request(
-        "https://api.deepseek.com/chat/completions",
-        data=json.dumps(payload).encode(),
-        headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-        method="POST")
-    with urllib.request.urlopen(req, timeout=100) as response:
-        result = json.load(response)
-    articles = json.loads(result["choices"][0]["message"]["content"])["articles"]
-    lookup = {item["url"]: item for item in items}
-    clean = []
-    for a in articles:
-        source = lookup.get(a.get("source_url"))
-        if not source or a.get("category") != source["category"]:
-            raise ValueError("Generated article has an invalid source/category.")
-        if not all(isinstance(a.get(k), str) and a[k].strip() for k in ("title", "summary", "context")):
-            raise ValueError("Incomplete generated article.")
-        context = a["context"]
-        if any(term in context for term in ("现有资料不足", "素材仅", "未说明", "无法判断更深层", "没有足够信息")) or len(context) < 55:
-            raise ValueError("Low-information background detected; refusing publication.")
-        clean.append({**a, "publisher": source["publisher"], "published": source["published"]})
-    if not 5 <= len(clean) <= 8 or len({a["category"] for a in clean}) < 3:
-        raise ValueError("Coverage validation failed.")
-    if len({a["source_url"] for a in clean}) != len(clean):
-        raise ValueError("Duplicate source URLs.")
-    return clean
+    def validate(articles):
+        clean = []
+        seen = set()
+        for a in articles:
+            if not isinstance(a, dict):
+                continue
+            source_id = str(a.get("source_id", "")).strip()
+            source = lookup.get(source_id)
+            if not source or source_id in seen:
+                print("Skipped invalid or duplicate source_id:", source_id[:30])
+                continue
+            if not all(isinstance(a.get(k), str) and a[k].strip() for k in ("title", "summary", "context")):
+                print("Skipped incomplete article:", source_id)
+                continue
+            context = a["context"].strip()
+            if any(term in context for term in ("现有资料不足", "素材仅", "未说明", "无法判断更深层", "没有足够信息")) or len(context) < 55:
+                print("Skipped low-information background:", source_id)
+                continue
+            seen.add(source_id)
+            clean.append({
+                "title": a["title"].strip(), "summary": a["summary"].strip(),
+                "context": context, "category": source["category"],
+                "source_url": source["url"], "publisher": source["publisher"],
+                "published": source["published"],
+            })
+        return clean
+    messages = [
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": json.dumps(numbered, ensure_ascii=False)}
+    ]
+    for attempt in range(2):
+        payload = {
+            "model": model, "temperature": 0.2,
+            "response_format": {"type": "json_object"},
+            "messages": messages,
+        }
+        req = urllib.request.Request(
+            "https://api.deepseek.com/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=100) as response:
+            result = json.load(response)
+        raw = result["choices"][0]["message"]["content"]
+        data = json.loads(raw)
+        clean = validate(data.get("articles", []))
+        if 5 <= len(clean) <= 8 and len({a["category"] for a in clean}) == 3:
+            return clean
+        print("Attempt", attempt + 1, "failed coverage validation; valid:", len(clean))
+        messages.extend([
+            {"role": "assistant", "content": raw},
+            {"role": "user", "content": (
+                "上一版未满足校验。请重新输出5至8条且三大类别均有的文章，"
+                "每条仅使用输入中的source_id；不要重复编号。"
+                "确保context具体、信息充分，不要编造事实或使用空洞套话。"
+            )},
+        ])
+    raise ValueError("Could not produce 5-8 distinct source-verified articles across all categories.")
 
 def render(articles):
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
