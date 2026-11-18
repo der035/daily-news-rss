@@ -63,12 +63,12 @@ def collect():
     return sorted(items, key=lambda item: item["published"], reverse=True)[:55]
 
 def generate(items):
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
+    key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
     if not key:
-        raise RuntimeError("OPENAI_API_KEY is missing; keeping previous edition.")
+        raise RuntimeError("DEEPSEEK_API_KEY is missing; keeping previous edition.")
     if len(items) < 8 or len({i["category"] for i in items}) < 3:
         raise RuntimeError("Insufficient recent sourced coverage; keeping previous edition.")
-    model = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
+    model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
     instructions = (
         "你是严谨的中文新闻编辑。只能使用提供的新闻标题、摘要、日期与URL，不得假装已阅读原文。"
         "选择5至8条重要且不同的新闻，三大类别各至少一条。不要编造事实、引语、背景或影响。"
@@ -87,7 +87,7 @@ def generate(items):
         ]
     }
     req = urllib.request.Request(
-        "https://api.openai.com/v1/chat/completions",
+        "https://api.deepseek.com/chat/completions",
         data=json.dumps(payload).encode(),
         headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
         method="POST")
