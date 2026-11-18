@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Source-grounded daily digest. Requires OPENAI_API_KEY; fails closed."""
+"""Source-grounded daily digest using RSS plus article body; fails closed."""
 import datetime as dt
 import email.utils
 import html
@@ -9,6 +9,7 @@ import pathlib
 import re
 import urllib.request
 import xml.etree.ElementTree as ET
+from html.parser import HTMLParser
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
@@ -26,6 +27,47 @@ def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=18) as response:
         return response.read(1500000)
+
+
+class ArticleText(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.depth = 0
+        self.ignore = 0
+        self.current = []
+        self.paragraphs = []
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style", "nav", "footer", "header", "aside"):
+            self.ignore += 1
+        if tag == "p" and not self.ignore:
+            self.depth += 1
+            self.current = []
+    def handle_data(self, data):
+        if self.depth and not self.ignore:
+            self.current.append(data)
+    def handle_endtag(self, tag):
+        if tag == "p" and self.depth:
+            value = " ".join("".join(self.current).split())
+            if len(value) >= 75:
+                self.paragraphs.append(value)
+            self.depth = 0
+            self.current = []
+        if tag in ("script", "style", "nav", "footer", "header", "aside") and self.ignore:
+            self.ignore -= 1
+
+def enrich(items):
+    """Fetch article pages for additional factual context; never claim full text if blocked."""
+    for item in items[:30]:
+        try:
+            raw = fetch(item["url"])
+            parser = ArticleText()
+            parser.feed(raw.decode("utf-8", errors="replace"))
+            body = "\\n".join(parser.paragraphs)
+            item["article_excerpt"] = body[:5000] if len(body) >= 350 else ""
+        except Exception as error:
+            print("Article body unavailable:", item["publisher"], type(error).__name__)
+            item["article_excerpt"] = ""
+    return items
 
 def collect():
     items = []
@@ -70,12 +112,15 @@ def generate(items):
         raise RuntimeError("Insufficient recent sourced coverage; keeping previous edition.")
     model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
     instructions = (
-        "你是严谨的中文新闻编辑。只能使用提供的新闻标题、摘要、日期与URL，不得假装已阅读原文。"
-        "选择5至8条重要且不同的新闻，三大类别各至少一条。不要编造事实、引语、背景或影响。"
-        "每条中文标题不超过32字，摘要100至170字，背景解读70至130字。"
-        "背景若无法由素材证实，明确写‘现有资料不足以判断更深层原因’。"
-        "输出一个JSON对象，只有 articles 数组。每条必须有 category,title,summary,context,source_url。"
-        "source_url 必须与输入URL完全相同。不要添加未经提供的新闻。"
+        "你是中文深度新闻编辑。输入包含RSS标题、摘要及可能成功提取的文章段落article_excerpt。"
+        "选择5至8条重要新闻，三类均覆盖。优先选择有足够正文、可解释前因后果的报道。"
+        "每条标题不超过32字，summary用100至170字说明发生什么，context用100至200字解释具体背景："
+        "包括已知前情、事件机制、为何重要及可能影响，优先使用正文提供的可核实细节。"
+        "绝对不要写‘素材仅’‘现有资料不足’‘未说明’等编辑过程套话；也不要凭空编造历史、原因、人物或影响。"
+        "如果某篇报道没有足够材料写出有信息量的背景，直接跳过它并选另一篇。"
+        "将事实与预测区分开；推测须使用‘可能’等措辞，且必须有来源支持。"
+        "只输出JSON对象，含articles数组；每条有category,title,summary,context,source_url。"
+        "source_url必须与输入URL完全相同，category必须与输入相同。"
     )
     payload = {
         "model": model,
@@ -102,6 +147,9 @@ def generate(items):
             raise ValueError("Generated article has an invalid source/category.")
         if not all(isinstance(a.get(k), str) and a[k].strip() for k in ("title", "summary", "context")):
             raise ValueError("Incomplete generated article.")
+        context = a["context"]
+        if any(term in context for term in ("现有资料不足", "素材仅", "未说明", "无法判断更深层", "没有足够信息")) or len(context) < 55:
+            raise ValueError("Low-information background detected; refusing publication.")
         clean.append({**a, "publisher": source["publisher"], "published": source["published"]})
     if not 5 <= len(clean) <= 8 or len({a["category"] for a in clean}) < 3:
         raise ValueError("Coverage validation failed.")
@@ -140,7 +188,7 @@ def render(articles):
 def main():
     items = collect()
     print("Recent sourced items:", len(items))
-    articles = generate(items)
+    articles = generate(enrich(items))
     render(articles)
     print("Published articles:", len(articles))
 
