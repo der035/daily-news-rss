@@ -31,9 +31,9 @@ jobs:
           root=ET.parse('docs/feed.xml').getroot()
           assert root.tag=='rss'
           items=root.findall('./channel/item')
-          assert len(items)==20, f'Expected 20 stories (4 categories × 5), got {len(items)}'
-          assert html.count('class="category-panel"') == 4, 'Expected four category panels'
-          assert html.count('class="story"') == 20, 'Expected twenty article cards'
+          assert len(items)==25, f'Expected 25 stories (5 categories × 5), got {len(items)}'
+          assert html.count('class="category-panel"') == 5, 'Expected five category panels'
+          assert html.count('class="story"') == 25, 'Expected twenty-five article cards'
           PY
       - name: Validate browser JavaScript syntax
         run: |
