@@ -488,6 +488,24 @@ def render(articles):
 .term-dialog,.toc-dialog,.type-lab{max-width:calc(100vw - 28px)}
 .term-dialog p{overflow-wrap:anywhere;white-space:pre-line}
 @media(max-width:600px){.paper{padding-left:clamp(18px,5.4vw,26px);padding-right:clamp(18px,5.4vw,26px)}.paper>header{gap:8px}.paper>header>span:not(.header-actions){font-size:10px}.masthead{gap:10px}.masthead-name{font-size:clamp(25px,7.2vw,38px)}.masthead>.toc-open{min-height:40px}.category-nav button{padding-inline:8px}.story h2{font-size:clamp(29px,7.5vw,38px)}.story .takeaway{padding:16px 17px}.story .deep-block{padding:2px 16px 14px}.story-bottom{align-items:flex-start}.toc-inner{padding:18px}}"""
+    style += """/* Brand reference: electric-blue editorial frame, not a blue reading surface. */
+:root{--brand-electric:#0639f5}
+html:not(:has(body.theme-dark)){background:var(--brand-electric)}
+body:not(.theme-dark){background:var(--brand-electric)}
+body:not(.theme-dark) .paper{box-shadow:0 0 0 1px rgba(0,0,0,.07)}
+.category-nav button[aria-selected=true],.theme-dark .category-nav button[aria-selected=true]{background:var(--brand-electric)!important;color:#fff!important;border-color:var(--brand-electric)!important}
+.category-nav button[aria-selected=true] .nav-mark{color:#fff}
+.masthead{border-bottom-color:var(--brand-electric)}
+.toc-open{border-color:var(--brand-electric)!important}
+.toc-open::before{background:linear-gradient(var(--brand-electric),var(--brand-electric)) 0 1px/17px 2.5px no-repeat,linear-gradient(var(--brand-electric),var(--brand-electric)) 0 7px/17px 2.5px no-repeat,linear-gradient(var(--brand-electric),var(--brand-electric)) 0 13px/12px 2.5px no-repeat}
+.story .term{color:var(--blue)}
+.theme-dark{--brand-electric:#3867ff}
+html:has(body.theme-dark),body.theme-dark{background:#0e121b}
+.theme-dark .masthead{border-bottom-color:#547aff}
+.theme-dark .toc-open{border-color:#547aff!important}
+.theme-dark .category-nav button[aria-selected=true]{background:#3867ff!important;border-color:#3867ff!important;color:#fff!important}
+@media(min-width:1024px){body:not(.theme-dark) .paper{margin:26px auto 60px}.paper{position:relative}}
+@media(max-width:600px){html:not(:has(body.theme-dark)),body:not(.theme-dark){background:var(--paper)}body:not(.theme-dark) .paper{border-top:4px solid var(--brand-electric);margin-top:0}.masthead{border-bottom-width:2px}.category-nav button[aria-selected=true]{box-shadow:inset 0 -3px #fff3}}"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
