@@ -226,7 +226,7 @@ def render(articles):
     esc = lambda x: html.escape(str(x), quote=True)
     cards = []
     for i, a in enumerate(articles, 1):
-        photo = ('<figure><img src="' + esc(a["image"]) + '" alt="' + esc(a["title"]) + '" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.style.display=\\'none\\'"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if a.get("image") else ""
+        photo = ('<figure><img src="' + esc(a["image"]) + '" alt="' + esc(a["title"]) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if a.get("image") else ""
         cards.append(
             '<article class="story"><span class="kicker">' + str(i).zfill(2) + ' / ' + esc(a["category"]) + '</span>'
             + '<h2>' + esc(a["title"]) + '</h2>' + photo + '<p>' + esc(a["summary"]) + '</p>'
