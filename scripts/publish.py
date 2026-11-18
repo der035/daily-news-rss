@@ -470,6 +470,7 @@ def render(articles):
     style += """.ui-icon{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.15em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}.takeaway .micro,.theme-toggle,.save{display:inline-flex;align-items:center;gap:6px}.save[aria-pressed=true] .ui-icon{fill:currentColor}"""
     style += """.share-story{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:9px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;border-radius:6px}.share-story:hover,.share-story:focus-visible{background:var(--soft)}"""
     style += """.toc-open{border-radius:0!important;border:1.5px solid var(--ink)!important;padding:9px 12px!important;min-height:40px}.theme-toggle{border:0!important;border-radius:0!important;background:transparent!important;padding:6px 0!important;min-height:32px!important;font-size:12px;font-weight:700!important;color:var(--muted)!important;display:inline-flex;align-items:center;gap:5px}.theme-toggle:hover,.theme-toggle:focus-visible{color:var(--ink)!important;text-decoration:underline;text-underline-offset:4px}.header-actions{gap:10px}.masthead>.toc-open{flex-shrink:0}.story-bottom a{display:inline-flex;align-items:center;gap:4px}.source-arrow{width:.9em;height:.9em}@media(max-width:600px){.masthead>.toc-open{padding:8px!important;font-size:12px!important}.theme-toggle{font-size:11px}}"""
+    style += """header>.header-actions{order:0}header>span:not(.header-actions){order:1}header .theme-toggle{justify-content:flex-start;text-align:left}"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -511,7 +512,7 @@ addEventListener('resize',syncHeight);
             '<meta name="theme-color" content="#0639f5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="DAILY NOISE"><link rel="icon" type="image/svg+xml" href="icon.svg"><link rel="apple-touch-icon" href="apple-touch-icon.png"><title>THE DAILY NOISE — ' + date + '</title>'
             '<link rel="alternate" type="application/rss+xml" href="feed.xml"><style>' + style + '</style></head>'
             '<body><main class="paper">'
-            '<header><span>独立中文新闻简报</span><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button></span></header>'
+            '<header><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button></span><span>独立中文新闻简报</span></header>'
             '<div class="masthead"><div class="masthead-brand"><span class="masthead-name">THE DAILY <em>NOISE.</em></span><span class="masthead-date">' + date + '</span></div><button type="button" class="toc-open" aria-haspopup="dialog" aria-controls="toc-dialog">文章目录</button></div>'
             '<nav class="category-nav" role="tablist" aria-label="新闻栏目">'
             '<button id="tab-0" role="tab" aria-controls="panel-0" aria-selected="true" type="button"><span class="nav-mark nav-world" aria-hidden="true"><span></span></span><span class="nav-label">国际政治</span><span class="nav-index">01</span></button>'
