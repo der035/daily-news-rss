@@ -185,9 +185,9 @@ def generate(items):
         "entities最多4项，优先冷门但重要的人名、作品、机构、地名；name必须在summary或context中，"
         "definition为8至65字中文解释，evidence为输入素材里逐字存在的至少12字连续证据；证据不足不标注。"
         "只返回JSON对象："
-        "{\\\"articles\\\":[{\\\"source_ids\\\":[\\\"S1\\\",\\\"S2\\\"],\\\"title\\\":\\\"中文标题\\\","
-        "\\\"summary\\\":\\\"事实概述\\\",\\\"context\\\":\\\"背景与影响\\\","
-        "\\\"entities\\\":[{\\\"name\\\":\\\"名词\\\",\\\"definition\\\":\\\"释义\\\",\\\"evidence\\\":\\\"原文连续证据\\\"}]}]}。"
+        "{\"articles\":[{\"source_ids\":[\"S1\",\"S2\"],\"title\":\"中文标题\","
+        "\"summary\":\"事实概述\",\"context\":\"背景与影响\","
+        "\"entities\":[{\"name\":\"名词\",\"definition\":\"释义\",\"evidence\":\"原文连续证据\"}]}]}。"
         "标题不超过32字，不得创造source_ids。"
     )
     def validate(articles):
@@ -209,7 +209,7 @@ def generate(items):
             if any(other["category"] != source["category"] for other in sources):
                 print("Skipped mixed-category event:", ids)
                 continue
-            event_key = re.sub(r"[^\\w\\u4e00-\\u9fff]", "", str(a.get("title", "")).lower())[:40]
+            event_key = re.sub(r"[^\w\u4e00-\u9fff]", "", str(a.get("title", "")).lower())[:40]
             if event_key in seen_events:
                 print("Skipped duplicate event:", event_key)
                 continue
@@ -277,7 +277,7 @@ def generate(items):
                 "个不同事件，按重要性排序；同一事件多来源合并。"
                 "已入选标题（不能重复同一事件）：" +
                 json.dumps([a["title"] for a in category_output], ensure_ascii=False) +
-                "\\n可选素材：" + json.dumps(remaining, ensure_ascii=False)
+                "\n可选素材：" + json.dumps(remaining, ensure_ascii=False)
             )
             data = ask([{"role": "system", "content": instructions},
                         {"role": "user", "content": prompt}])
@@ -287,8 +287,8 @@ def generate(items):
                 if article["category"] != category or any(src["url"] in used_ids for src in article["sources"]):
                     continue
                 # Exact-title guard supplements the editorial duplicate instruction.
-                key_title = re.sub(r"[^\\w\\u4e00-\\u9fff]", "", article["title"])
-                if any(re.sub(r"[^\\w\\u4e00-\\u9fff]", "", old["title"]) == key_title for old in category_output):
+                key_title = re.sub(r"[^\w\u4e00-\u9fff]", "", article["title"])
+                if any(re.sub(r"[^\w\u4e00-\u9fff]", "", old["title"]) == key_title for old in category_output):
                     continue
                 category_output.append(article)
                 used_ids.update(src["url"] for src in article["sources"])
