@@ -453,6 +453,13 @@ def render(articles):
             takeaway = takeaway[:87] + "…"
         image = a.get("image", "")
         photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
+        sources = a.get("sources") or [{"url": a["source_url"], "publisher": a["publisher"]}]
+        source_links = ' · '.join(
+            '<a href="' + esc(x["url"]) + '" target="_blank" rel="noopener noreferrer">' +
+            esc(x["publisher"]) +
+            ' <svg class="ui-icon source-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>'
+            for x in sources
+        )
         cards[a["category"]].append(
             '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
             '<h2>' + esc(headline) + '</h2>' + photo +
@@ -460,7 +467,7 @@ def render(articles):
             '<div class="standard-block"><h3>发生了什么？</h3><p>' + focus_text(summary, article_context, article_entities, seen_terms) + '</p></div>'
             '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context, article_entities, seen_terms) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
-            '<div class="story-bottom"><a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">核对原始报道：' + esc(a["publisher"]) + ' <svg class="ui-icon source-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>'
+            '<div class="story-bottom"><div class="source-links"><span>核对原始报道：</span>' + source_links + '</div>'
             '<button type="button" class="share-story" aria-label="分享这篇新闻的文字内容"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 14v6h14v-6"/></svg> 分享文章</button></div></article>'
         )
     category_names = ("国际政治", "娱乐文化", "消费科技")
@@ -530,6 +537,7 @@ html:has(body.theme-dark),body.theme-dark{background:#0e121b}
 .source-mark .source-caption{font-size:10px;color:var(--muted);font-weight:600}
 .story>.source-mark{opacity:.78}
 @media(max-width:600px){.story>.source-mark{margin:10px 0 14px}}"""
+    style += """.source-links{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;font-size:12px}.source-links>span{color:var(--muted);font-weight:650}.source-links a{display:inline-flex;align-items:center;gap:2px;min-height:30px}.story-bottom{align-items:center}.story>.source-mark{margin-bottom:12px}"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
