@@ -596,6 +596,12 @@ button,a,[role="tab"]{touch-action:manipulation}
 .category-panel .story,.category-panel .takeaway,.category-panel .deep-block{max-width:100%;min-width:0;overflow-wrap:anywhere}
 .category-panel img{max-width:100%;height:auto}
 """
+    style += """/* One visible category only: no adjacent panel can bleed into Safari's viewport. */
+.category-rail{display:block!important;width:100%!important;height:auto!important;overflow:visible!important;scroll-snap-type:none!important;clip-path:none!important;touch-action:pan-y!important}
+.category-panel{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;overflow:visible!important;scroll-snap-align:none!important}
+.category-panel[hidden]{display:none!important}
+.category-panel .story{max-width:100%;overflow-wrap:anywhere}
+"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -634,18 +640,46 @@ const feedbackDialog=document.querySelector('#feedback-dialog');document.querySe
 const rail=document.querySelector('.category-rail'),tabs=[...document.querySelectorAll('.category-nav button')];
 const panels=[...rail.querySelectorAll('.category-panel')];let currentPanel=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-function panelLeft(i){return Math.round(i*rail.clientWidth)}
-function nearestPanel(){let best=0,dist=Infinity;panels.forEach((p,i)=>{const d=Math.abs(panelLeft(i)-rail.scrollLeft);if(d<dist){best=i;dist=d}});return best}
-function syncHeight(){const panel=panels[currentPanel];if(panel)rail.style.height=panel.scrollHeight+'px'}
-function selectTab(i){currentPanel=i;tabs.forEach((b,j)=>{b.setAttribute('aria-selected',String(i===j));b.tabIndex=i===j?0:-1});syncHeight()}
-function goToPanel(i,smooth){i=Math.max(0,Math.min(panels.length-1,i));clearTimeout(settleTimer);selectTab(i);rail.scrollTo({left:panelLeft(i),behavior:'instant'});requestAnimationFrame(syncHeight)}
-tabs.forEach((b,i)=>{b.addEventListener('click',()=>{goToPanel(i,false);const top=document.querySelector('.category-nav').getBoundingClientRect().top;if(top<0)window.scrollTo({top:window.scrollY+top-12,behavior:reducedMotion.matches?'instant':'smooth'})});b.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const j=(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[j].focus();goToPanel(j,true)}})});
-let settleTimer;
-let snapping=false;
-function settle(){clearTimeout(settleTimer);if(snapping)return;const i=nearestPanel();snapping=true;goToPanel(i,false);setTimeout(()=>{snapping=false;syncHeight()},80)}
-rail.addEventListener('scroll',()=>{if(snapping)return;clearTimeout(settleTimer);settleTimer=setTimeout(settle,110)},{passive:true});
-rail.addEventListener('touchend',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,180)},{passive:true});
-rail.addEventListener('scrollend',settle,{passive:true});
+function syncHeight(){rail.style.height='auto'}
+function goToPanel(index,smooth){
+  const i=Math.max(0,Math.min(panels.length-1,index));
+  currentPanel=i;
+  panels.forEach((panel,j)=>{panel.hidden=j!==i;panel.setAttribute('aria-hidden',String(j!==i));});
+  tabs.forEach((button,j)=>{button.setAttribute('aria-selected',String(j===i));button.tabIndex=j===i?0:-1;});
+  syncHeight();
+}
+goToPanel(0,false);
+tabs.forEach((button,i)=>{
+  button.addEventListener('click',()=>{
+    goToPanel(i,false);
+    const top=document.querySelector('.category-nav').getBoundingClientRect().top;
+    if(top<0)window.scrollTo({top:window.scrollY+top-12,behavior:reducedMotion.matches?'instant':'smooth'});
+  });
+  button.addEventListener('keydown',event=>{
+    if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+      event.preventDefault();
+      const next=(i+(event.key==='ArrowRight'?1:panels.length-1))%panels.length;
+      tabs[next].focus();goToPanel(next,false);
+    }
+  });
+});
+let touchStart=null;
+rail.addEventListener('touchstart',event=>{
+  if(event.touches.length!==1){touchStart=null;return}
+  const target=event.target;
+  if(target.closest('button,a,input,textarea,select,[role="dialog"],.term')){touchStart=null;return}
+  const t=event.touches[0];
+  touchStart={x:t.clientX,y:t.clientY};
+},{passive:true});
+rail.addEventListener('touchend',event=>{
+  if(!touchStart||event.changedTouches.length!==1)return;
+  const t=event.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;
+  touchStart=null;
+  if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.5){
+    goToPanel(currentPanel+(dx<0?1:-1),false);
+  }
+},{passive:true});
+rail.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
 
 const tocDialog=document.querySelector('#toc-dialog');const tocList=tocDialog.querySelector('.toc-list');const tocGroups=[...document.querySelectorAll('.category-panel')];const tocNames=['国内新闻','国际政治','娱乐文化','消费科技'];tocGroups.forEach((panel,categoryIndex)=>{const stories=[...panel.querySelectorAll('.story')];if(!stories.length)return;const group=document.createElement('section');group.className='toc-group';const heading=document.createElement('h3');heading.textContent=tocNames[categoryIndex];group.append(heading);stories.forEach(story=>{const button=document.createElement('button');button.type='button';button.className='toc-item';button.textContent=story.querySelector('h2')?.textContent||'新闻';button.addEventListener('click',()=>{pendingTocJump={category:categoryIndex,story};closeToc()});group.append(button)});tocList.append(group)});let tocLockedY=0,pendingTocJump=null;function openToc(){tocLockedY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-tocLockedY+'px';document.body.style.left='0';document.body.style.right='0';document.body.style.width='100%';tocDialog.showModal()}function closeToc(){tocDialog.close()}tocDialog.addEventListener('close',()=>{document.body.style.position='';document.body.style.top='';document.body.style.left='';document.body.style.right='';document.body.style.width='';window.scrollTo(0,tocLockedY);if(pendingTocJump){const jump=pendingTocJump;pendingTocJump=null;requestAnimationFrame(()=>{goToPanel(jump.category,false);requestAnimationFrame(()=>requestAnimationFrame(()=>jump.story.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'})))})}});document.querySelector('.toc-open').addEventListener('click',openToc);tocDialog.querySelector('.toc-close').addEventListener('click',closeToc);tocDialog.addEventListener('click',e=>{if(e.target===tocDialog)closeToc()});
 const resizeObserver=new ResizeObserver(()=>syncHeight());panels.forEach(p=>resizeObserver.observe(p));
