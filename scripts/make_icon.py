@@ -8,7 +8,7 @@ import zlib
 S = 180
 K = 3
 W = S * K
-BLUE = (6, 45, 211)
+BLUE = (6, 57, 245)
 WHITE = (246, 244, 237)
 PINK = (255, 156, 206)
 ORANGE = (255, 126, 69)
@@ -55,14 +55,12 @@ def label(text, x, y, scale, color, spacing=1):
                          x + (col+1)*scale, y + (row+1)*scale, color)
         x += (5 + spacing)*scale
 
-# A typographic newspaper cover, with disciplined editorial spacing.
-rect(18, 18, 162, 19, WHITE)
-label("THE DAILY", 22, 26, 1.45, WHITE, 1)
-circle(150, 31, 4.5, ORANGE)
-rect(18, 47, 162, 52, PINK)
-label("DN", 21, 61, 11.5, WHITE, 1)
-rect(18, 151, 162, 156, ORANGE)
-label("NOISE / 01", 21, 161, 1.25, WHITE, 1)
+# Minimal editorial monogram, matching docs/icon.svg.
+rect(18, 21, 162, 25, WHITE)
+label("THE DAILY", 22, 34, 1.55, WHITE, 1)
+label("DN", 18, 69, 12.5, WHITE, 1)
+rect(18, 145, 162, 150, WHITE)
+label("NOISE", 22, 157, 2.3, WHITE, 1)
 
 # Downsample supersampled RGB for softer diagonals and smooth curves.
 raw = bytearray()
