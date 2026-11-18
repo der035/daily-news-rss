@@ -273,7 +273,7 @@ def render(articles):
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
     date = now.strftime("%Y.%m.%d")
     esc = lambda x: html.escape(str(x), quote=True)
-    cards = []
+    cards = {category: [] for category in ("国际政治", "娱乐文化", "消费科技")}
     for i, a in enumerate(articles, 1):
         headline = a["title"]
         summary = a["summary"].strip()
@@ -284,7 +284,7 @@ def render(articles):
         minutes = max(1, round((len(summary) + len(context)) / 350))
         image = a.get("image", "")
         photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
-        cards.append(
+        cards[a["category"]].append(
             '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
             '<div class="story-meta"><span class="kicker">' + str(i).zfill(2) + ' / ' + esc(a["category"]) + '</span>'
             '<span class="reading-time">约 ' + str(minutes) + ' 分钟</span></div>'
@@ -296,7 +296,16 @@ def render(articles):
             '<div class="story-bottom"><a href="' + esc(a["source_url"]) + '" target="_blank" rel="noopener noreferrer">核对原始报道：' + esc(a["publisher"]) + ' ↗</a>'
             '<button type="button" class="save" aria-pressed="false" aria-label="收藏这条新闻">☆ 收藏</button></div></article>'
         )
+    category_names = ("国际政治", "娱乐文化", "消费科技")
+    sections = ''.join(
+        '<section class="category-panel" id="panel-' + str(j) + '" aria-labelledby="tab-' + str(j) + '" role="tabpanel">'
+        '<div class="section-heading"><span class="section-index">0' + str(j + 1) + ' / SECTION</span>'
+        '<h2>' + esc(category) + '</h2><span>' + str(len(cards[category])) + ' STORIES</span></div>'
+        + ''.join(cards[category]) + '</section>'
+        for j, category in enumerate(category_names)
+    )
     style = """*{box-sizing:border-box}html{scroll-behavior:smooth;background:#0639f5}body{margin:0;background:#0639f5;color:#111;font-family:Arial,'PingFang SC','Microsoft YaHei',sans-serif}.paper{max-width:980px;margin:20px auto 60px;background:#f5f3ed;padding:clamp(24px,6vw,70px)}header{border-bottom:4px solid #111;padding-bottom:18px;display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:900}header a,.story a{color:#0639f5}.hero h1{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(64px,12vw,148px);line-height:.82;letter-spacing:-.05em;margin:80px 0 28px}.hero h1 em{font-family:Georgia,serif;font-weight:400}.sticker{background:#ff9cce;display:inline-block;padding:12px;transform:rotate(-7deg);border:2px solid}.lede{font-size:21px;font-weight:700;padding-bottom:25px}.reader-tools{position:relative;top:auto;z-index:10;background:#f5f3ed;border-top:3px solid;border-bottom:3px solid;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.reader-tools label{font-size:12px;font-weight:900}.modes{display:flex;gap:5px;flex-wrap:wrap}.modes button,.save{border:2px solid #111;background:transparent;color:#111;padding:9px 12px;font-weight:800;cursor:pointer}.modes button[aria-pressed=true]{background:#111;color:#fff}.progress{height:4px;position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;background:#ddd;z-index:11}.progress span{display:block;height:100%;width:0;background:#ff7e45}.story{border-bottom:3px solid;padding:42px 0;scroll-margin-top:100px}.story-meta,.story-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.kicker{font-size:12px;font-weight:900;background:#ff7e45;padding:7px}.reading-time,.micro,.source-note{font-size:12px;color:#555}.story h2{font-size:clamp(29px,5vw,52px);line-height:1.15;letter-spacing:-.03em}.story h3{font-size:20px;margin:25px 0 8px}.story p{font-size:17px;line-height:1.8}.story figure{margin:20px 0}.story figure img{display:block;width:100%;max-height:490px;object-fit:cover;background:#ddd}.story figcaption{font-size:12px;color:#555;margin-top:8px}.takeaway{background:#ffdfeb;border-left:6px solid #111;padding:18px 20px}.takeaway .micro{font-weight:900;color:#111}.takeaway p{font-weight:800;font-size:20px;line-height:1.5;margin:10px 0 0}.deep-block{background:#e9e9e4;padding:2px 20px 15px;margin:18px 0}.story-bottom{margin-top:22px}.story-bottom a{font-weight:800}.save[aria-pressed=true]{background:#ff9cce}.mode-quick .standard-block,.mode-quick .deep-block,.mode-standard .deep-block{display:none}.reading-guide{font-size:13px;line-height:1.6;color:#555}footer{padding:30px 0;font-size:13px}button:focus-visible,a:focus-visible{outline:4px solid #0639f5;outline-offset:3px}@media(max-width:600px){.paper{margin:8px;padding:22px}.hero h1{margin-top:65px}.reader-tools{top:auto}.story{padding:30px 0}.story h2{font-size:32px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}"""
+    style += """.category-nav{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:20px 0 12px;padding:4px 0 10px}.category-nav::-webkit-scrollbar{display:none}.category-nav button{flex:1 0 auto;min-height:48px;border:2px solid #111;background:#f5f3ed;color:#111;font-size:15px;font-weight:850;padding:10px 14px;cursor:pointer}.category-nav button[aria-selected=true]{background:#0639f5;color:#fff}.category-rail{display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;gap:0;touch-action:pan-x pan-y}.category-rail::-webkit-scrollbar{display:none}.category-panel{flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always}.section-heading{border-bottom:4px solid #111;padding:20px 0 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:12px}.section-heading h2{font-family:Georgia,'Songti SC','Noto Serif CJK SC',serif;font-size:clamp(30px,5vw,44px);margin:0;font-weight:800}.section-index,.section-heading>span:last-child{font-size:11px;font-weight:900;letter-spacing:.07em}.story h2{font-family:'PingFang SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;font-weight:800;line-height:1.27;letter-spacing:-.015em}.story p{font-family:'PingFang SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif;font-size:18px;line-height:1.85;font-weight:400;letter-spacing:.012em;overflow-wrap:anywhere}.story .takeaway p{font-size:clamp(19px,3.6vw,23px);line-height:1.62;font-weight:750}.story h3{font-family:'PingFang SC','Noto Sans CJK SC',sans-serif;font-weight:800;font-size:21px}.reading-guide{font-size:14px}.story .source-note{font-size:12px}.category-hint{font-size:12px;font-weight:700;color:#555}@media(max-width:600px){.category-nav button{font-size:14px;padding:10px 12px}.story p{font-size:17px;line-height:1.85}.story h2{font-size:30px;line-height:1.3}}@media(prefers-reduced-motion:reduce){.category-rail{scroll-behavior:auto}}"""
     script = """(function(){
 const root=document.body,buttons=[...document.querySelectorAll('[data-mode]')];
 function mode(m){if(!['quick','standard','deep'].includes(m))m='standard';root.classList.remove('mode-quick','mode-standard','mode-deep');root.classList.add('mode-'+m);buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===m)));try{localStorage.setItem('tdn-mode',m)}catch(e){}}
@@ -304,6 +313,10 @@ let stored='standard';try{stored=localStorage.getItem('tdn-mode')||'standard'}ca
 buttons.forEach(b=>b.addEventListener('click',()=>mode(b.dataset.mode)));
 document.querySelectorAll('.save').forEach(b=>{const id=b.closest('.story').dataset.story;let saved=false;try{saved=localStorage.getItem('tdn-save:'+id)==='1'}catch(e){}function show(){b.setAttribute('aria-pressed',String(saved));b.textContent=saved?'★ 已收藏':'☆ 收藏'}show();b.addEventListener('click',()=>{saved=!saved;try{localStorage.setItem('tdn-save:'+id,saved?'1':'0')}catch(e){}show()})});
 function progress(){const max=document.documentElement.scrollHeight-innerHeight;document.querySelector('.progress span').style.width=(max>0?Math.min(100,scrollY/max*100):100)+'%'}
+const rail=document.querySelector('.category-rail'),tabs=[...document.querySelectorAll('.category-nav button')];
+function selectTab(i){tabs.forEach((b,j)=>{b.setAttribute('aria-selected',String(i===j));b.tabIndex=i===j?0:-1})}
+tabs.forEach((b,i)=>{b.addEventListener('click',()=>{rail.scrollTo({left:rail.clientWidth*i,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});selectTab(i)});b.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const j=(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[j].focus();tabs[j].click()}})});
+let frame=false;rail.addEventListener('scroll',()=>{if(frame)return;frame=true;requestAnimationFrame(()=>{selectTab(Math.max(0,Math.min(tabs.length-1,Math.round(rail.scrollLeft/Math.max(1,rail.clientWidth)))));frame=false})},{passive:true});
 addEventListener('scroll',progress,{passive:true});addEventListener('resize',progress);progress();
 })();"""
     page = ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -318,7 +331,12 @@ addEventListener('scroll',progress,{passive:true});addEventListener('resize',pro
             '<button type="button" data-mode="standard" aria-pressed="true">📖 标准</button>'
             '<button type="button" data-mode="deep" aria-pressed="false">🧠 深度</button></div></div>'
             '<p class="reading-guide">可以只看粉色重点卡片；想知道原因，切换到「深度」。收藏会保存在当前浏览器。</p>'
-            + ''.join(cards) +
+            '<nav class="category-nav" role="tablist" aria-label="新闻栏目">'
+            '<button id="tab-0" role="tab" aria-controls="panel-0" aria-selected="true" type="button">🌍 国际政治</button>'
+            '<button id="tab-1" role="tab" aria-controls="panel-1" aria-selected="false" type="button" tabindex="-1">🎭 娱乐文化</button>'
+            '<button id="tab-2" role="tab" aria-controls="panel-2" aria-selected="false" type="button" tabindex="-1">💻 消费科技</button></nav>'
+            '<p class="category-hint">← 左右滑动切换栏目，向下阅读当前栏目 ↓</p>'
+            '<div class="category-rail">' + sections + '</div>' +
             '<footer>THE DAILY NOISE · 新闻事实请以原始报道为准 · 每日北京时间 08:00 更新（成功生成时）</footer>'
             '</main><script>' + script + '</script></body></html>')
     rss = ET.Element("rss", {"version": "2.0"})
