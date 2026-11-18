@@ -17,10 +17,20 @@ DOCS = ROOT / "docs"
 SOURCES = [
     ("国际政治", "BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
     ("国际政治", "The Guardian World", "https://www.theguardian.com/world/rss"),
+    ("国际政治", "NPR World", "https://feeds.npr.org/1004/rss.xml"),
+    ("国际政治", "DW", "https://rss.dw.com/rdf/rss-en-all"),
+    ("国际政治", "France 24", "https://www.france24.com/en/rss"),
+    ("国际政治", "Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml"),
     ("娱乐文化", "The Guardian Culture", "https://www.theguardian.com/culture/rss"),
     ("娱乐文化", "Variety", "https://variety.com/feed/"),
+    ("娱乐文化", "Deadline", "https://deadline.com/feed/"),
+    ("娱乐文化", "The Hollywood Reporter", "https://www.hollywoodreporter.com/feed/"),
     ("消费科技", "The Guardian Technology", "https://www.theguardian.com/uk/technology/rss"),
     ("消费科技", "Ars Technica", "https://feeds.arstechnica.com/arstechnica/index"),
+    ("消费科技", "The Verge", "https://www.theverge.com/rss/index.xml"),
+    ("消费科技", "Wired", "https://www.wired.com/feed/rss"),
+    ("消费科技", "TechCrunch", "https://techcrunch.com/feed/"),
+    ("消费科技", "Engadget", "https://www.engadget.com/rss.xml"),
 ]
 BASE = "https://the-daily-noise.pages.dev/"
 UA = "TheDailyNoise/1.0 (+https://github.com/der035/daily-news-rss)"
@@ -77,7 +87,7 @@ class ArticleText(HTMLParser):
 
 def enrich(items):
     """Fetch article pages for additional factual context; never claim full text if blocked."""
-    for item in items[:30]:
+    for item in items[:55]:
         try:
             raw = fetch(item["url"])
             parser = ArticleText()
@@ -99,6 +109,8 @@ def collect():
             entries = root.findall(".//item")
             if not entries:
                 entries = root.findall(".//{http://www.w3.org/2005/Atom}entry")
+            if not entries:
+                entries = root.findall(".//{http://purl.org/rss/1.0/}item")
             for entry in entries[:15]:
                 def field(*names):
                     for name in names:
@@ -109,12 +121,12 @@ def collect():
                             if element.attrib.get("href"):
                                 return element.attrib["href"]
                     return ""
-                title = html.unescape(re.sub("<[^>]+>", "", field("title", "{http://www.w3.org/2005/Atom}title")))
-                link = field("link", "{http://www.w3.org/2005/Atom}link")
-                description = html.unescape(re.sub("<[^>]+>", "", field("description", "summary", "{http://www.w3.org/2005/Atom}summary")))
-                date_text = field("pubDate", "{http://www.w3.org/2005/Atom}updated")
+                title = html.unescape(re.sub("<[^>]+>", "", field("title", "{http://www.w3.org/2005/Atom}title", "{http://purl.org/rss/1.0/}title")))
+                link = field("link", "{http://www.w3.org/2005/Atom}link", "{http://purl.org/rss/1.0/}link")
+                description = html.unescape(re.sub("<[^>]+>", "", field("description", "summary", "{http://www.w3.org/2005/Atom}summary", "{http://purl.org/rss/1.0/}description")))
+                date_text = field("pubDate", "{http://www.w3.org/2005/Atom}updated", "{http://purl.org/dc/elements/1.1/}date", "{http://www.w3.org/2005/Atom}published")
                 try:
-                    date = email.utils.parsedate_to_datetime(date_text)
+                    date = email.utils.parsedate_to_datetime(date_text) if not re.match(r"^\d{4}-", date_text) else dt.datetime.fromisoformat(date_text.replace("Z", "+00:00"))
                     if date.tzinfo is None: date = date.replace(tzinfo=dt.timezone.utc)
                     if now - date > dt.timedelta(hours=48): continue
                 except Exception:
@@ -137,7 +149,16 @@ def collect():
                     items.append(dict(category=category, publisher=publisher, title=title, url=link, image=image_url, description=description[:600], published=date.isoformat()))
         except Exception as error:
             print("Source unavailable:", publisher, type(error).__name__)
-    return sorted(items, key=lambda item: item["published"], reverse=True)[:55]
+    # Balance candidates across publishers and categories.
+    selected, per_source, per_category = [], {}, {}
+    for item in sorted(items, key=lambda x: x["published"], reverse=True):
+        pub, cat = item["publisher"], item["category"]
+        if per_source.get(pub, 0) >= 6 or per_category.get(cat, 0) >= 22:
+            continue
+        selected.append(item)
+        per_source[pub] = per_source.get(pub, 0) + 1
+        per_category[cat] = per_category.get(cat, 0) + 1
+    return selected[:65]
 
 def generate(items):
     key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
@@ -185,11 +206,11 @@ def generate(items):
                 print("Skipped duplicate event:", event_key)
                 continue
             if not all(isinstance(a.get(k), str) and a[k].strip() for k in ("title", "summary", "context")):
-                print("Skipped incomplete article:", source_id)
+                print("Skipped incomplete article:", ids)
                 continue
             context = a["context"].strip()
             if any(term in context for term in ("现有资料不足", "素材仅", "未说明", "无法判断更深层", "没有足够信息")) or len(context) < 55:
-                print("Skipped low-information background:", source_id)
+                print("Skipped low-information background:", ids)
                 continue
             # Entity explanations require a verbatim supporting span from the input source.
             source_text = json.dumps(sources, ensure_ascii=False)
