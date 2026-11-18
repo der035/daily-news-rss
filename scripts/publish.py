@@ -555,6 +555,16 @@ html:has(body.theme-dark),body.theme-dark{background:#0e121b}
 .story-bottom .source-links.has-additional{display:flex}
 .story-bottom .source-links.has-additional>span{font-size:11px}
 """
+    style += """/* Mobile interaction regression fixes: remove stray rail edge and stabilize category changes. */
+.category-rail{border:0!important;outline:0!important;box-shadow:none!important;scroll-behavior:auto!important;overflow-y:clip!important}
+.category-panel{border-left:0!important;border-right:0!important;outline:0!important;box-shadow:none!important}
+.category-panel>.story{border-left:0;border-right:0}
+.story>h2{border-right:0!important;outline:0!important}
+html,body{overflow-x:clip}
+button,a,[role="tab"]{touch-action:manipulation}
+.category-nav{position:relative;z-index:2}
+@media(max-width:600px){.category-rail{scroll-snap-type:none!important}.category-panel{scroll-snap-align:none!important}}
+"""
     script = """(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -596,13 +606,13 @@ function panelLeft(i){return panels[i].offsetLeft-panels[0].offsetLeft}
 function nearestPanel(){let best=0,dist=Infinity;panels.forEach((p,i)=>{const d=Math.abs(panelLeft(i)-rail.scrollLeft);if(d<dist){best=i;dist=d}});return best}
 function syncHeight(){const panel=panels[currentPanel];if(panel)rail.style.height=panel.scrollHeight+'px'}
 function selectTab(i){currentPanel=i;tabs.forEach((b,j)=>{b.setAttribute('aria-selected',String(i===j));b.tabIndex=i===j?0:-1});syncHeight()}
-function goToPanel(i,smooth){i=Math.max(0,Math.min(panels.length-1,i));selectTab(i);rail.scrollTo({left:panelLeft(i),behavior:smooth&&!reducedMotion.matches?'smooth':'instant'})}
-tabs.forEach((b,i)=>{b.addEventListener('click',()=>goToPanel(i,true));b.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const j=(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[j].focus();goToPanel(j,true)}})});
+function goToPanel(i,smooth){i=Math.max(0,Math.min(panels.length-1,i));clearTimeout(settleTimer);selectTab(i);rail.scrollTo({left:panelLeft(i),behavior:'instant'});requestAnimationFrame(syncHeight)}
+tabs.forEach((b,i)=>{b.addEventListener('click',()=>{goToPanel(i,false);const top=document.querySelector('.category-nav').getBoundingClientRect().top;if(top<0)window.scrollTo({top:window.scrollY+top-12,behavior:reducedMotion.matches?'instant':'smooth'})});b.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const j=(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[j].focus();goToPanel(j,true)}})});
 let settleTimer;
-function settle(){clearTimeout(settleTimer);const i=nearestPanel();goToPanel(i,false)}
+function settle(){clearTimeout(settleTimer);const i=nearestPanel();if(i!==currentPanel)selectTab(i);syncHeight()}
 rail.addEventListener('scroll',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,160)},{passive:true});
 rail.addEventListener('touchend',()=>{clearTimeout(settleTimer);settleTimer=setTimeout(settle,240)},{passive:true});
-rail.addEventListener('scrollend',settle,{passive:true});
+
 const tocDialog=document.querySelector('#toc-dialog');const tocList=tocDialog.querySelector('.toc-list');const tocGroups=[...document.querySelectorAll('.category-panel')];const tocNames=['国际政治','娱乐文化','消费科技'];tocGroups.forEach((panel,categoryIndex)=>{const stories=[...panel.querySelectorAll('.story')];if(!stories.length)return;const group=document.createElement('section');group.className='toc-group';const heading=document.createElement('h3');heading.textContent=tocNames[categoryIndex];group.append(heading);stories.forEach(story=>{const button=document.createElement('button');button.type='button';button.className='toc-item';button.textContent=story.querySelector('h2')?.textContent||'新闻';button.addEventListener('click',()=>{pendingTocJump={category:categoryIndex,story};closeToc()});group.append(button)});tocList.append(group)});let tocLockedY=0,pendingTocJump=null;function openToc(){tocLockedY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-tocLockedY+'px';document.body.style.left='0';document.body.style.right='0';document.body.style.width='100%';tocDialog.showModal()}function closeToc(){tocDialog.close()}tocDialog.addEventListener('close',()=>{document.body.style.position='';document.body.style.top='';document.body.style.left='';document.body.style.right='';document.body.style.width='';window.scrollTo(0,tocLockedY);if(pendingTocJump){const jump=pendingTocJump;pendingTocJump=null;requestAnimationFrame(()=>{goToPanel(jump.category,false);requestAnimationFrame(()=>requestAnimationFrame(()=>jump.story.scrollIntoView({behavior:reducedMotion.matches?'instant':'smooth',block:'start'})))})}});document.querySelector('.toc-open').addEventListener('click',openToc);tocDialog.querySelector('.toc-close').addEventListener('click',closeToc);tocDialog.addEventListener('click',e=>{if(e.target===tocDialog)closeToc()});
 const resizeObserver=new ResizeObserver(()=>syncHeight());panels.forEach(p=>resizeObserver.observe(p));
 window.addEventListener('load',()=>{goToPanel(currentPanel,false)});
