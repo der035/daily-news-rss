@@ -2,7 +2,8 @@ name: Publish verified daily digest
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    # Avoid GitHub Actions top-of-hour congestion (07:50 Beijing time).
+    - cron: '50 23 * * *'
 permissions:
   contents: write
 concurrency:
