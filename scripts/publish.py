@@ -660,6 +660,7 @@ button,a,[role="tab"]{touch-action:manipulation}
 .category-panel figure img{display:block;max-width:100%;object-fit:contain}
 """
     style += """.category-nav{gap:0!important;border:2px solid var(--ink)!important}.category-nav button{border:0!important;border-right:2px solid var(--ink)!important;border-radius:0!important}.category-nav button:last-child{border-right:0!important}.category-nav button[aria-selected=true]{box-shadow:inset 0 -3px 0 #ffffff88!important}.story figure[hidden]{display:none!important}"""
+    style += """.category-nav button[aria-selected=true],.theme-dark .category-nav button[aria-selected=true]{border-right:2px solid var(--ink)!important}.category-nav button:last-child[aria-selected=true],.theme-dark .category-nav button:last-child[aria-selected=true]{border-right:0!important}"""
     style += """/* Five columns fit the phone viewport, with concise mobile labels. */
 .category-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;overflow:hidden!important}
 .category-nav button{box-sizing:border-box!important;min-width:0!important;width:100%!important;overflow:hidden!important;padding:10px 1px!important;font-size:clamp(10px,2.7vw,14px)!important;letter-spacing:-.04em!important}
