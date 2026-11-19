@@ -502,7 +502,7 @@ def render(articles, version):
         if len(takeaway) > 90:
             takeaway = takeaway[:87] + "…"
         image = safe_image(a.get("image", ""))
-        photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
+        photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy" onerror="this.parentElement.hidden=true"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
         sources = a.get("sources") or [{"url": a["source_url"], "publisher": a["publisher"]}]
         source_links = ' · '.join(
             '<a href="' + esc(x["url"]) + '" target="_blank" rel="noopener noreferrer">' +
@@ -659,6 +659,7 @@ button,a,[role="tab"]{touch-action:manipulation}
 .category-panel .story,.category-panel .story>*,.category-panel figure{box-sizing:border-box;max-width:100%;min-width:0}
 .category-panel figure img{display:block;max-width:100%;object-fit:contain}
 """
+    style += """.category-nav{gap:0!important;border:2px solid var(--ink)!important}.category-nav button{border:0!important;border-right:2px solid var(--ink)!important;border-radius:0!important}.category-nav button:last-child{border-right:0!important}.category-nav button[aria-selected=true]{box-shadow:inset 0 -3px 0 #ffffff88!important}.story figure[hidden]{display:none!important}"""
     style += """/* Five columns fit the phone viewport, with concise mobile labels. */
 .category-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:100%!important;overflow:hidden!important}
 .category-nav button{box-sizing:border-box!important;min-width:0!important;width:100%!important;overflow:hidden!important;padding:10px 1px!important;font-size:clamp(10px,2.7vw,14px)!important;letter-spacing:-.04em!important}
@@ -788,7 +789,7 @@ def next_version():
     """Advance the patch version from the last published HTML edition."""
     page = DOCS / "index.html"
     previous = page.read_text(encoding="utf-8") if page.exists() else ""
-    match = re.search(r'class="footer-version">VERSION (\\d+)\\.(\\d+)\\.(\\d+)', previous)
+    match = re.search(r'class="footer-version">VERSION (\d+)\.(\d+)\.(\d+)', previous)
     if not match:
         return "1.5.1"  # First release after the original v1.5.0 footer.
     major, minor, patch = map(int, match.groups())
