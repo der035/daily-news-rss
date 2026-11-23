@@ -50,7 +50,7 @@ try{
  const items=entries.map((node,i)=>{
   const field=tag=>clean(node.getElementsByTagName(tag)[0]?.textContent);
   const title=field('title'),desc=field('description');
-  return {title,category:names[Math.min(4,Math.floor(i/5))],text:desc.replace(/来源：[^\\n]+$/,'').replace(/来龙去脉：/g,'背景与影响。')};
+  return {title,category:names[Math.min(4,Math.floor(i/5))],text:desc.replace(/来源：[^\n]+$/,'').replace(/来龙去脉：/g,'背景与影响。')};
  }).filter(x=>x.title&&x.text);
  if(!items.length)throw Error('RSS 中没有可朗读的新闻');
  state.items=items;
