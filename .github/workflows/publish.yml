@@ -12,7 +12,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,7 +63,7 @@ jobs:
         env:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           DASHSCOPE_WORKSPACE_ID: ${{ secrets.DASHSCOPE_WORKSPACE_ID }}
-          DASHSCOPE_TTS_MODEL: cosyvoice-v3.5-flash
+          DASHSCOPE_TTS_MODEL: cosyvoice-v3-flash
           DASHSCOPE_TTS_VOICE: longanyang
         run: |
           if [ -n "$DASHSCOPE_API_KEY" ] && [ -n "$DASHSCOPE_WORKSPACE_ID" ]; then
@@ -100,7 +100,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/feed.xml docs/apple-touch-icon.png docs/icon.svg docs/podcast/latest.json docs/podcast/latest.txt docs/podcast/*.mp3
+          git add docs/index.html docs/feed.xml docs/apple-touch-icon.png docs/icon.svg docs/podcast/latest.json docs/podcast/latest.txt
+          git add -A -- 'docs/podcast/*.mp3'
           if ! git diff --cached --quiet; then
             git commit -m "Publish daily sourced digest"
             # Another push may land while this workflow generates the edition.
