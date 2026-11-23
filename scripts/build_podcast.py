@@ -109,8 +109,17 @@ def podcast_narration(articles):
     if not key:
         return None
     groups=[articles[start:start+5] for start in range(0,len(articles),5)]
+
+    def rewrite(group):
+        result=rewrite_story_group(group,key)
+        if result is not None:
+            return result
+        # Recover a malformed batch without paying to regenerate successful groups.
+        individual=[rewrite_story_group([article],key) for article in group]
+        return [item[0] for item in individual] if all(individual) else None
+
     with ThreadPoolExecutor(max_workers=3) as pool:
-        results=list(pool.map(lambda group: rewrite_story_group(group,key),groups))
+        results=list(pool.map(rewrite,groups))
     if any(group is None for group in results):
         raise RuntimeError("Podcast script rewrite incomplete; retaining previously published audio")
     return [text for group in results for text in group]
