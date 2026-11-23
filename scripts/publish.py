@@ -213,7 +213,7 @@ def generate(items):
         "国内新闻只选中国大陆的国内政策、社会、经济与公共事务；跨国事件若主要焦点是国际外交则归国际政治。Apple栏目只选苹果公司产品、操作系统、Apple Intelligence、供应链、服务和公司重大动向；消费科技优先选择其他厂商与行业事件，避免跨栏目重复。"
         "每篇summary用100至170字解释已核实的事实，context用100至200字解释背景与影响。"
         "区分事实、当事方说法与预测；不编造引语、原因或结果。"
-        "entities最多4项，优先冷门但重要的人名、作品、机构、地名；name必须在summary或context中，"
+        "entities最多6项，优先解释赛事、行业术语、政策缩写及重要人名和机构，定义使用通俗语言；name必须在summary或context中，"
         "definition为8至65字中文解释，evidence为输入素材里逐字存在的至少12字连续证据；证据不足不标注。"
         "只返回JSON对象："
         "{\"articles\":[{\"source_ids\":[\"S1\",\"S2\"],\"title\":\"中文标题\","
@@ -263,7 +263,7 @@ def generate(items):
                     name in a["summary"] + context and name not in ("特朗普", "习近平", "普京", "拜登", "泽连斯基") and
                     name not in {e["name"] for e in valid_entities}):
                     valid_entities.append({"name": name, "definition": definition})
-                if len(valid_entities) >= 4:
+                if len(valid_entities) >= 6:
                     break
             seen.update(ids)
             seen_events.add(event_key)
@@ -370,6 +370,10 @@ def render(articles, version):
     esc = lambda x: html.escape(str(x), quote=True)
     # Curated glossary: only annotate terms with reviewed, reusable definitions.
     glossary = {
+        "超级碗": "美国职业美式橄榄球联盟 NFL 的年度冠军赛，中场通常有大型音乐表演。",
+        "中场秀": "比赛中场休息时举行的表演，超级碗的中场秀通常由知名音乐人演出。",
+        "出口管制": "政府限制某些商品或技术向特定国家、地区或对象出口的措施。",
+        "市值": "上市公司股价乘以已发行股票数量得到的市场估值。",
         "反垄断": "防止企业通过垄断或限制竞争损害市场竞争的法律与监管措施。",
         "关税": "一国对进口或出口商品征收的税；可能影响商品价格和贸易流向。",
         "通货膨胀": "商品和服务的总体价格水平持续上涨，货币购买力相应下降。",
@@ -524,7 +528,7 @@ def render(articles, version):
         )
         cards[a["category"]].append(
             '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
-            '<div class="story-heading"><h2>' + esc(headline) + '</h2><button type="button" class="story-play" data-audio-index="' + str(i-1) + '" disabled aria-label="播放本篇新闻">▶ 播放本篇</button></div>' + photo +
+            '<div class="story-heading"><h2>' + esc(headline) + '</h2><button type="button" class="story-play" data-audio-index="' + str(i-1) + '" disabled aria-label="播放本篇新闻">播放</button></div>' + photo +
             '<div class="standard-block"><h3>新闻速览</h3><p>' + focus_text(summary, article_context, article_entities, seen_terms) + '</p></div>'
             '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context, article_entities, seen_terms) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
@@ -686,6 +690,7 @@ button,a,[role="tab"]{touch-action:manipulation}
     style += """.audio-entry{display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:10px 12px;border:2px solid var(--ink);color:var(--ink)!important;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap}.audio-entry:hover,.audio-entry:focus-visible{background:var(--ink);color:var(--paper)!important}@media(max-width:700px){.audio-entry{padding:7px 8px;font-size:11px}}"""
     style += """.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.header-actions .audio-entry{font-size:12px;padding:7px 9px;min-height:34px}@media(max-width:700px){.header-actions{gap:7px}.header-actions .audio-entry{font-size:11px;padding:6px 8px}}"""
     style += """.home-podcast{border:3px solid var(--ink,#111);padding:18px;margin:18px 0 22px;background:var(--paper,#f5f3ed)}.home-podcast[hidden]{display:none!important}.home-podcast-heading{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}.home-podcast-heading span{color:var(--muted,#555)}.home-podcast audio{display:block}.audio-entry{cursor:pointer;background:var(--paper,#f5f3ed);font-family:inherit}.audio-entry[aria-expanded=true]{background:var(--blue,#0639f5);color:#fff!important}"""
+    style += """.standard-block{margin:16px 0;padding:14px 18px;border:1px solid var(--muted);border-left:4px solid var(--blue);background:color-mix(in srgb,var(--soft) 60%,var(--paper));}.standard-block h3{margin:0 0 7px}.standard-block p{margin:0}.story .source-mark{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}.source-mark .story-play{flex:none;min-height:44px;margin:0;padding:6px 14px;white-space:nowrap}.feedback-frame{width:100%;height:min(70dvh,620px);border:0}"""
     style += """.story-heading{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-bottom:16px}.story-heading h2{flex:none;width:100%;min-width:0;margin:0;overflow-wrap:break-word}.story-heading .story-play{align-self:flex-end;flex-shrink:0;font-size:12px;padding:7px 10px;white-space:nowrap;margin:0}@media(max-width:600px){.story-heading{gap:8px}.story-heading .story-play{font-size:11px;padding:6px 8px}}.story-audio{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0}.story-play{border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-weight:850;padding:11px 16px;cursor:pointer}.story-play:disabled{opacity:.5;cursor:not-allowed}.story-play[aria-pressed=true]{background:var(--blue);color:#fff}.story-audio-note{font-size:12px;color:var(--muted)}"""
     script = r"""(function(){
 const root=document.body;
@@ -716,12 +721,13 @@ document.querySelectorAll('.story').forEach(story=>{
    while(mark.firstChild)a.append(mark.firstChild);
    const arrow=document.createElementNS('http://www.w3.org/2000/svg','svg');arrow.setAttribute('class','ui-icon source-arrow');arrow.setAttribute('viewBox','0 0 24 24');arrow.setAttribute('aria-hidden','true');
    const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d','M7 17 17 7M8 7h9v9');arrow.append(path);a.append(arrow);mark.append(a);
+   const playback=story.querySelector('.story-play');if(playback)mark.append(playback);
  }
  const group=story.querySelector('.story-bottom .source-links');
  if(group){if(links.length>1){links[0].remove();group.classList.add('has-additional');const label=group.querySelector('span');if(label)label.textContent='其他参考报道：'}else group.remove()}
  story.querySelectorAll('figure figcaption').forEach(c=>{if(/^图片来源：/.test(c.textContent.trim()))c.remove()});
 });
-const feedbackDialog=document.querySelector('#feedback-dialog');document.querySelector('.feedback-link')?.addEventListener('click',()=>feedbackDialog.showModal());feedbackDialog.querySelector('.feedback-close').addEventListener('click',()=>feedbackDialog.close());feedbackDialog.addEventListener('click',e=>{if(e.target===feedbackDialog)feedbackDialog.close()});document.querySelector('#feedback-form').addEventListener('submit',e=>{e.preventDefault();const form=e.currentTarget;if(!form.reportValidity())return;const kind=form.elements.kind.value;const detail=form.elements.detail.value.trim();if(!detail)return;const title='['+kind+'] '+detail.split('\n')[0].slice(0,55);const body='### 反馈类型\n'+kind+'\n\n### 反馈内容\n'+detail+'\n\n### 网站\nhttps://the-daily-noise.pages.dev/';const url='https://github.com/der035/daily-news-rss/issues/new?title='+encodeURIComponent(title)+'&body='+encodeURIComponent(body);window.open(url,'_blank','noopener,noreferrer')});
+const feedbackDialog=document.querySelector('#feedback-dialog');document.querySelector('.feedback-link')?.addEventListener('click',()=>feedbackDialog.showModal());feedbackDialog.querySelector('.feedback-close').addEventListener('click',()=>feedbackDialog.close());feedbackDialog.addEventListener('click',e=>{if(e.target===feedbackDialog)feedbackDialog.close()});const feedbackFrame=feedbackDialog.querySelector('.feedback-frame');if(feedbackFrame){document.querySelector('.feedback-link').addEventListener('click',()=>{if(!feedbackFrame.getAttribute('src'))feedbackFrame.src=feedbackFrame.dataset.embedUrl})}
 const rail=document.querySelector('.category-rail'),tabs=[...document.querySelectorAll('.category-nav button')];
 const panels=[...rail.querySelectorAll('.category-panel')];let currentPanel=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -792,7 +798,7 @@ function setPodcastSource(url,label,index){
  podcastStatus.textContent=label;
  storyButtons.forEach(button=>{
   const current=Number(button.dataset.audioIndex)===index;
-  button.textContent=current?'Ⅱ 正在播放':'▶ 播放本篇';
+  button.textContent=current?'暂停':'播放';
   button.setAttribute('aria-pressed',String(current));
  });
 }
@@ -815,8 +821,8 @@ podcastToggle.addEventListener('click',()=>{
  podcastAudio.play().catch(()=>{podcastStatus.textContent='请点击播放器中的播放按钮开始收听'});
 });
 storyButtons.forEach(button=>button.addEventListener('click',()=>playStory(Number(button.dataset.audioIndex))));
-podcastAudio.addEventListener('pause',()=>{storyButtons.forEach(b=>{b.textContent='▶ 播放本篇';b.setAttribute('aria-pressed','false')})});
-podcastAudio.addEventListener('ended',()=>{podcastStatus.textContent='播放完毕';storyButtons.forEach(b=>b.textContent='▶ 播放本篇')});
+podcastAudio.addEventListener('pause',()=>{storyButtons.forEach(b=>{b.textContent='播放';b.setAttribute('aria-pressed','false')})});
+podcastAudio.addEventListener('ended',()=>{podcastStatus.textContent='播放完毕';storyButtons.forEach(b=>b.textContent='播放')});
 (async()=>{
  try{
   const response=await fetch('./podcast/latest.json',{cache:'no-store'});
@@ -851,7 +857,7 @@ podcastAudio.addEventListener('ended',()=>{podcastStatus.textContent='播放完�
             '<button id="tab-3" role="tab" aria-controls="panel-3" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-tech" aria-hidden="true"><span></span></span><span class="nav-label">消费科技</span></button><button id="tab-4" role="tab" aria-controls="panel-4" aria-selected="false" type="button" tabindex="-1" aria-label="Apple 专题"><span class="nav-label">APPLE</span></button></nav>'
             '<div class="category-rail">' + sections + '</div>' +
             '<footer class="site-footer"><div class="footer-main"><span>THE DAILY NOISE · 新闻事实请以原始报道为准</span><button class="feedback-link" type="button">反馈与建议</button></div><div class="footer-signature"><span>EDITED &amp; BUILT BY <strong>AA</strong></span><span class="footer-version">VERSION ' + version + '</span></div><div class="footer-update">每日北京时间 08:00 更新（成功生成时）</div></footer>'
-            '</main><dialog id="feedback-dialog" class="feedback-dialog" aria-labelledby="feedback-title"><form class="feedback-inner" id="feedback-form"><div class="feedback-head"><h2 id="feedback-title">反馈与建议</h2><button type="button" class="feedback-close" aria-label="关闭反馈">×</button></div><label>反馈类型<select name="kind"><option>内容纠错</option><option>阅读体验</option><option>功能建议</option><option>其他</option></select></label><label>具体内容<textarea name="detail" required maxlength="2500" placeholder="请描述问题或建议，涉及新闻时可附上标题。"></textarea></label><p class="feedback-note">点击下方按钮会前往 GitHub 创建反馈单，需要 GitHub 账号登录并确认提交。本站不会在这一步自动收集或发送文字，请勿填写个人敏感信息。</p><button class="feedback-send" type="submit">前往 GitHub 提交反馈 ↗</button></form></dialog><dialog id="toc-dialog" class="toc-dialog" aria-labelledby="toc-title"><div class="toc-inner"><div class="toc-head"><h2 id="toc-title">跳转到文章</h2><button type="button" class="toc-close" aria-label="关闭目录">×</button></div><div class="toc-list"></div></div></dialog><dialog id="term-dialog" class="term-dialog" aria-labelledby="term-title"><div class="term-dialog-inner"><div class="term-dialog-head"><h2 id="term-title"></h2><button class="term-close" type="button" aria-label="关闭解释">×</button></div><p id="term-definition"></p><p class="term-hint">术语速解 · 点击外部或按 Esc 关闭</p></div></dialog><script>' + script + '</script></body></html>')
+            '</main><dialog id="feedback-dialog" class="feedback-dialog" aria-labelledby="feedback-title"><div class="feedback-inner"><div class="feedback-head"><h2 id="feedback-title">反馈与建议</h2><button type="button" class="feedback-close" aria-label="关闭反馈">×</button></div><p class="feedback-note">反馈表单正在接入，开通后可在这里直接提交。</p></div></dialog><dialog id="toc-dialog" class="toc-dialog" aria-labelledby="toc-title"><div class="toc-inner"><div class="toc-head"><h2 id="toc-title">跳转到文章</h2><button type="button" class="toc-close" aria-label="关闭目录">×</button></div><div class="toc-list"></div></div></dialog><dialog id="term-dialog" class="term-dialog" aria-labelledby="term-title"><div class="term-dialog-inner"><div class="term-dialog-head"><h2 id="term-title"></h2><button class="term-close" type="button" aria-label="关闭解释">×</button></div><p id="term-definition"></p><p class="term-hint">术语速解 · 点击外部或按 Esc 关闭</p></div></dialog><script>' + script + '</script></body></html>')
     rss = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(rss, "channel")
     for tag, value in (("title", "THE DAILY NOISE · 世界每天都很吵"), ("link", BASE), ("description", "国内新闻、国际政治、娱乐文化与消费科技中文新闻简报"), ("language", "zh-CN"), ("lastBuildDate", email.utils.format_datetime(now))):
