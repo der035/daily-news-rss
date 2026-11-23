@@ -527,12 +527,12 @@ def render(articles, version):
         )
         cards[a["category"]].append(
             '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
-            '<h2>' + esc(headline) + '</h2>' + photo +
+            '<div class="story-heading"><h2>' + esc(headline) + '</h2><button type="button" class="story-play" data-audio-index="' + str(i-1) + '" disabled aria-label="播放本篇新闻">▶ 播放本篇</button></div>' + photo +
             '<div class="takeaway"><span class="micro"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-12h-7z"/></svg> 10 秒看懂</span><p>' + focus_text(takeaway, article_context, article_entities, seen_terms) + '</p></div>'
             '<div class="standard-block"><h3>发生了什么？</h3><p>' + focus_text(summary, article_context, article_entities, seen_terms) + '</p></div>'
             '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context, article_entities, seen_terms) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
-            '<div class="story-audio"><button type="button" class="story-play" data-audio-index="' + str(i) + '" disabled aria-label="播放本篇新闻">▶ 播放本篇</button><span class="story-audio-note">音频准备中</span></div>'
+            
             '<div class="story-bottom"><div class="source-links"><span>核对原始报道：</span>' + source_links + '</div>'
             '<button type="button" class="share-story" aria-label="分享这篇新闻的文字内容"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 14v6h14v-6"/></svg> 分享文章</button></div></article>'
         )
@@ -690,7 +690,7 @@ button,a,[role="tab"]{touch-action:manipulation}
     style += """.audio-entry{display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:10px 12px;border:2px solid var(--ink);color:var(--ink)!important;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap}.audio-entry:hover,.audio-entry:focus-visible{background:var(--ink);color:var(--paper)!important}@media(max-width:700px){.audio-entry{padding:7px 8px;font-size:11px}}"""
     style += """.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.header-actions .audio-entry{font-size:12px;padding:7px 9px;min-height:34px}@media(max-width:700px){.header-actions{gap:7px}.header-actions .audio-entry{font-size:11px;padding:6px 8px}}"""
     style += """.home-podcast{border:3px solid var(--ink,#111);padding:18px;margin:18px 0 22px;background:var(--paper,#f5f3ed)}.home-podcast[hidden]{display:none!important}.home-podcast-heading{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}.home-podcast-heading span{color:var(--muted,#555)}.home-podcast audio{display:block}.audio-entry{cursor:pointer;background:var(--paper,#f5f3ed);font-family:inherit}.audio-entry[aria-expanded=true]{background:var(--blue,#0639f5);color:#fff!important}"""
-    style += """.story-audio{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0}.story-play{border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-weight:850;padding:11px 16px;cursor:pointer}.story-play:disabled{opacity:.5;cursor:not-allowed}.story-play[aria-pressed=true]{background:var(--blue);color:#fff}.story-audio-note{font-size:12px;color:var(--muted)}"""
+    style += """.story-heading{display:flex;align-items:flex-start;gap:12px;justify-content:space-between}.story-heading h2{flex:1;min-width:0;margin-top:0}.story-heading .story-play{flex-shrink:0;font-size:12px;padding:7px 9px;white-space:nowrap;margin-top:3px}@media(max-width:600px){.story-heading{gap:8px}.story-heading .story-play{font-size:11px;padding:6px 7px}}.story-audio{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0}.story-play{border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-weight:850;padding:11px 16px;cursor:pointer}.story-play:disabled{opacity:.5;cursor:not-allowed}.story-play[aria-pressed=true]{background:var(--blue);color:#fff}.story-audio-note{font-size:12px;color:var(--muted)}"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -804,7 +804,7 @@ function playStory(index){
  if(!podcastData||!podcastData.article_audio)return;
  const url=podcastData.article_audio[String(index)];
  if(!url)return;
- const story=document.getElementById('story-'+index);
+ const story=document.getElementById('story-'+(index+1));
  const title=story?.querySelector('h2')?.textContent||'本篇新闻';
  if(activeIndex===index&&!podcastAudio.paused){podcastAudio.pause();return}
  setPodcastSource(url,'正在播放：'+title,index);
