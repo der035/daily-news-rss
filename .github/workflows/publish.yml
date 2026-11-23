@@ -73,6 +73,8 @@ jobs:
           ffmpeg -version | head -n 1
       - name: Prepare source-grounded podcast transcript
         env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_MODEL: deepseek-chat
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           DASHSCOPE_WORKSPACE_ID: ${{ secrets.DASHSCOPE_WORKSPACE_ID }}
           DASHSCOPE_TTS_MODEL: cosyvoice-v3.5-flash
