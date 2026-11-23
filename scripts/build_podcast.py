@@ -40,11 +40,7 @@ def spoken_summary(description, limit=190):
         chosen=[match.group(0)]
     return "".join(chosen)
 
-def podcast_narration(articles):
-    key=os.getenv("DEEPSEEK_API_KEY","").strip()
-    if not key:
-        print("Podcast narration editor unavailable; using source excerpts.")
-        return None
+def rewrite_story_group(articles, key):
 
     instructions=(
         "把给定新闻改写为中文单人新闻播客口播稿。像主持人给朋友讲明白一件事，"
@@ -76,28 +72,43 @@ def podcast_narration(articles):
             completion=json.load(response)
         choice=completion["choices"][0]
         if choice["finish_reason"]!="stop":
-            raise ValueError("Incomplete podcast narration")
+            raise ValueError("Incomplete narration response")
         stories=json.loads(choice["message"]["content"])["stories"]
         if not isinstance(stories,list) or len(stories)!=len(articles):
             raise ValueError("Unexpected podcast story count")
         result=[]
-        for index,story in enumerate(stories):
+        for article,story in zip(articles,stories):
+            index=article["index"]
             if not isinstance(story,dict) or type(story.get("index")) is not int or story["index"]!=index:
                 raise ValueError("Unexpected podcast article order")
             raw_text=story.get("text")
             if not isinstance(raw_text,str):
                 raise ValueError("Missing podcast narration")
             text=" ".join(raw_text.split())
-            if not 60<=len(text)<=190 or text[-1] not in "。！？":
-                raise ValueError("Podcast narration outside expected length or incomplete")
+            if not 45<=len(text)<=230:
+                raise ValueError(f"Article {index+1} narration length is {len(text)}")
+            if text[-1] not in "。！？":
+                text+="。"
             result.append(text)
         usage=completion.get("usage",{})
         print(f"Podcast narration rewritten: {len(result)} stories; "
               f"DeepSeek input/output tokens: {usage.get('prompt_tokens','?')}/{usage.get('completion_tokens','?')}",flush=True)
         return result
     except (OSError,ValueError,KeyError,IndexError,TypeError) as exc:
-        print(f"Podcast narration rewrite unavailable ({type(exc).__name__}); using source excerpts.",flush=True)
+        detail=str(exc) if type(exc) is ValueError else type(exc).__name__
+        print(f"Podcast narration group {articles[0]['index']+1} unavailable: {detail}",flush=True)
         return None
+
+def podcast_narration(articles):
+    key=os.getenv("DEEPSEEK_API_KEY","").strip()
+    if not key:
+        return None
+    groups=[articles[start:start+5] for start in range(0,len(articles),5)]
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        results=list(pool.map(lambda group: rewrite_story_group(group,key),groups))
+    if any(group is None for group in results):
+        raise RuntimeError("Podcast script rewrite incomplete; retaining previously published audio")
+    return [text for group in results for text in group]
 
 def build():
     root=ET.parse(DOCS/"feed.xml").getroot()
