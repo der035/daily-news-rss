@@ -59,6 +59,11 @@ jobs:
           assert html.count('class="category-panel"') == 5, 'Expected five category panels'
           assert html.count('class="story"') == 25, 'Expected twenty-five article cards'
           PY
+      - name: Install audio tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -n 1
       - name: Prepare source-grounded podcast transcript
         env:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
