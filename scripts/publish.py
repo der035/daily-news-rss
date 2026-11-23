@@ -513,9 +513,6 @@ def render(articles, version):
                 if entity in sentence and 12 <= len(sentence) <= 120:
                     article_context[entity] = sentence
                     break
-        takeaway = re.split(r"(?<=[。！？])", summary, maxsplit=1)[0].strip()
-        if len(takeaway) > 90:
-            takeaway = takeaway[:87] + "…"
         image = safe_image(a.get("image", ""))
         photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy" onerror="this.parentElement.hidden=true"><figcaption>图片来源：' + esc(a["publisher"]) + '</figcaption></figure>') if image else ""
         sources = a.get("sources") or [{"url": a["source_url"], "publisher": a["publisher"]}]
@@ -528,8 +525,7 @@ def render(articles, version):
         cards[a["category"]].append(
             '<article class="story" id="story-' + str(i) + '" data-story="' + esc(a["source_url"]) + '">'
             '<div class="story-heading"><h2>' + esc(headline) + '</h2><button type="button" class="story-play" data-audio-index="' + str(i-1) + '" disabled aria-label="播放本篇新闻">▶ 播放本篇</button></div>' + photo +
-            '<div class="takeaway"><span class="micro"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-12h-7z"/></svg> 10 秒看懂</span><p>' + focus_text(takeaway, article_context, article_entities, seen_terms) + '</p></div>'
-            '<div class="standard-block"><h3>发生了什么？</h3><p>' + focus_text(summary, article_context, article_entities, seen_terms) + '</p></div>'
+            '<div class="standard-block"><h3>新闻速览</h3><p>' + focus_text(summary, article_context, article_entities, seen_terms) + '</p></div>'
             '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context, article_entities, seen_terms) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
             
