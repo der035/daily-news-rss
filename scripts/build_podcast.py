@@ -2,7 +2,7 @@
 """Create a source-faithful Chinese audio briefing transcript from the published RSS.
 
 No model improvisation: all substantive statements come from published article descriptions.
-Optionally synthesize MP3 via Azure Speech when explicit credentials are provided.
+Optionally synthesize MP3 via Alibaba Cloud CosyVoice when credentials are provided.
 """
 import datetime as dt
 import email.utils
@@ -57,8 +57,8 @@ def synthesize(data):
         return
     if not re.fullmatch(r"[a-zA-Z0-9_-]{4,128}",workspace):
         raise ValueError("Invalid DashScope workspace ID")
-    model=os.getenv("DASHSCOPE_TTS_MODEL","cosyvoice-v3.5-flash")
-    if model not in {"cosyvoice-v3.5-flash","cosyvoice-v3.5-plus"}:
+    model=os.getenv("DASHSCOPE_TTS_MODEL","cosyvoice-v3-flash")
+    if model not in {"cosyvoice-v3-flash","cosyvoice-v3-plus"}:
         raise ValueError("Unsupported CosyVoice model")
     voice=os.getenv("DASHSCOPE_TTS_VOICE","longanyang")
     if not re.fullmatch(r"[a-zA-Z0-9_-]{3,80}",voice):
@@ -76,7 +76,7 @@ def synthesize(data):
         if len(text)>20000:
             raise ValueError("TTS segment exceeds official 20000-character limit")
         part=client.audio.tts.synthesize(text,model=model,voice=voice)
-        if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\\xff\\xfb",b"\\xff\\xf3",b"\\xff\\xf2")):
+        if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\xff\xfb",b"\xff\xf3",b"\xff\xf2")):
             raise ValueError("CosyVoice returned invalid MP3 bytes")
         audio_parts.append(part)
     # MP3 streams can be joined, but frame and duration correctness must be
@@ -90,7 +90,7 @@ def synthesize(data):
             p.write_bytes(part)
             files.append(p)
         concat=Path(tmp)/"concat.txt"
-        concat.write_text("".join(f"file '{p}'\\n" for p in files),encoding="utf-8")
+        concat.write_text("".join(f"file '{p}'\n" for p in files),encoding="utf-8")
         target=OUT/(data["edition_id"]+".mp3")
         subprocess.run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-f","concat","-safe","0","-i",str(concat),"-c","copy","-y",str(target)],check=True,timeout=180)
         if target.stat().st_size>24_000_000 or target.stat().st_size<1000:
