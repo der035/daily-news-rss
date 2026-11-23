@@ -4,6 +4,7 @@
 No model improvisation: all substantive statements come from published article descriptions.
 Optionally synthesize MP3 via Alibaba Cloud CosyVoice when credentials are provided.
 """
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime as dt
 import email.utils
 import hashlib
@@ -87,26 +88,44 @@ def synthesize(data):
         import dashscope
     except ImportError as exc:
         raise RuntimeError("Install dashscope>=2.0.1 to synthesize audio") from exc
-    client=dashscope.Client(api_key=key,workspace=workspace,region="cn-beijing")
-    # The official SDK supports 20k characters per call. Each story is
-    # synthesized separately for reliable retries and source traceability.
-    audio_parts=[]
-    story_audio={}
+    # Use a separate SDK client per worker; shared client thread safety is unknown.
+    # Preserve segment order when collecting futures, regardless of completion order.
     import time
+    import random
     started=time.monotonic()
-    for index,segment in enumerate(data["segments"]):
-        if time.monotonic()-started > 1500:
-            raise TimeoutError("Podcast TTS exceeded 25-minute budget; stopping additional calls")
-        text=segment["text"]
-        print(f"Synthesizing segment {index+1}/{len(data['segments'])}: {len(text)} chars",flush=True)
-        if len(text)>20000:
+    segments=data["segments"]
+    workers=int(os.getenv("PODCAST_TTS_WORKERS","4"))
+    if not 1 <= workers <= 6:
+        raise ValueError("PODCAST_TTS_WORKERS must be between 1 and 6")
+    def generate(index, segment):
+        content=segment["text"]
+        if len(content)>20000:
             raise ValueError("TTS segment exceeds official 20000-character limit")
-        part=client.audio.tts.synthesize(text,model=model,voice=voice)
-        if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\xff\xfb",b"\xff\xf3",b"\xff\xf2")):
-            raise ValueError("CosyVoice returned invalid MP3 bytes")
-        audio_parts.append(part)
-        if segment['type']=='story':
-            story_audio[segment['article_index']]=part
+        client=dashscope.Client(api_key=key,workspace=workspace,region="cn-beijing")
+        for attempt in range(4):
+            if time.monotonic()-started > 1500:
+                raise TimeoutError("Podcast TTS exceeded 25-minute budget")
+            try:
+                print(f"Synthesizing segment {index+1}/{len(segments)} (attempt {attempt+1}): {len(content)} chars",flush=True)
+                part=client.audio.tts.synthesize(content,model=model,voice=voice)
+                if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\\xff\\xfb",b"\\xff\\xf3",b"\\xff\\xf2")):
+                    raise ValueError("CosyVoice returned invalid MP3 bytes")
+                return index,part
+            except Exception as exc:
+                if attempt==3:
+                    raise
+                delay=min(2**attempt*3+random.uniform(0,2),20)
+                print(f"TTS segment {index+1} failed ({type(exc).__name__}); retry in {delay:.1f}s",flush=True)
+                time.sleep(delay)
+    audio_parts=[None]*len(segments)
+    print(f"Concurrent TTS: {workers} workers, {len(segments)} segments",flush=True)
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures=[pool.submit(generate,i,segment) for i,segment in enumerate(segments)]
+        for future in as_completed(futures):
+            index,part=future.result()
+            audio_parts[index]=part
+            print(f"Completed segment {index+1}/{len(segments)}",flush=True)
+    story_audio={segment["article_index"]:audio_parts[i] for i,segment in enumerate(segments) if segment["type"]=="story"}
     # MP3 streams can be joined, but frame and duration correctness must be
     # verified with ffprobe before making the output public.
     import subprocess
