@@ -41,9 +41,15 @@ def build():
         # No LLM rewriting: preserve source-grounded summary and background verbatim.
         desc=re.sub(r"\n来源：[^\n]*$","",desc).replace("来龙去脉：","背景与影响：")
         desc=re.sub(r"\s+"," ",desc).strip()
-        segments.append({"type":"story","category":category,"title":title,"source_url":url,"text":title+"。"+desc})
+        # Audio edition: two lead stories per category, with bounded narration.
+        if i%5 < 2:
+            segments.append({"type":"story","category":category,"title":title,"source_url":url,"text":title+"。"+desc[:360]})
         sources.append({"title":title,"url":url,"category":category})
     segments.append({"type":"closing","text":"以上是今天的新闻简报。详细报道与原始来源，请在每日噪音网站查看。感谢收听。"})
+    total_chars=sum(len(x["text"]) for x in segments)
+    if total_chars > 5500:
+        raise ValueError(f"Podcast exceeds 5500-character budget: {total_chars}")
+    print(f"Podcast character budget: {total_chars}/5500; {len(segments)} segments")
     transcript="\n\n".join(x["text"] for x in segments)
     digest=hashlib.sha256((date+"\n"+transcript).encode()).hexdigest()[:16]
     return {"date":date,"edition_id":digest,"status":"transcript_ready","title":f"THE DAILY NOISE · {date}","segments":segments,"sources":sources,"transcript":transcript}
@@ -71,8 +77,13 @@ def synthesize(data):
     # The official SDK supports 20k characters per call. Each story is
     # synthesized separately for reliable retries and source traceability.
     audio_parts=[]
-    for segment in data["segments"]:
+    import time
+    started=time.monotonic()
+    for index,segment in enumerate(data["segments"]):
+        if time.monotonic()-started > 600:
+            raise TimeoutError("Podcast TTS exceeded 10-minute budget; stopping additional calls")
         text=segment["text"]
+        print(f"Synthesizing segment {index+1}/{len(data['segments'])}: {len(text)} chars",flush=True)
         if len(text)>20000:
             raise ValueError("TTS segment exceeds official 20000-character limit")
         part=client.audio.tts.synthesize(text,model=model,voice=voice)
