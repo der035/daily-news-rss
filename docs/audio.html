@@ -40,8 +40,28 @@ $('rate').onchange=()=>{if(state.playing){stop();start()}};$('voice').onchange=(
 function mode(m){if(m!==state.mode)stop();state.mode=m;const read=m==='read';$('readTab').setAttribute('aria-selected',String(read));$('podcastTab').setAttribute('aria-selected',String(!read));$('modeLabel').textContent=read?'READ ALOUD / 系统语音':'DAILY BRIEFING / AI 播客';$('modeTitle').textContent=read?'听完整的今日新闻':'今日播客 · 筹备中';$('readControls').classList.toggle('hidden',!read);$('readSettings').classList.toggle('hidden',!read);$('speechNote').classList.toggle('hidden',!read);$('podcastInfo').classList.toggle('hidden',read);$('playlistSection').classList.toggle('hidden',!read);setStatus(read?'选择一篇开始收听':'播客音频尚未上线')}
 $('readTab').onclick=()=>mode('read');$('podcastTab').onclick=()=>mode('podcast');
 async function load(){
-try{const res=await fetch('./index.html',{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const doc=new DOMParser().parseFromString(await res.text(),'text/html');const date=doc.querySelector('.masthead-date')?.textContent?.trim()||'';$('edition').textContent=date+' · 每日新闻朗读';const panels=[...doc.querySelectorAll('.category-panel')];const names=['国内新闻','国际政治','娱乐文化','消费科技','APPLE'];const items=[];panels.forEach((panel,j)=>{panel.querySelectorAll('article.story').forEach(article=>{const title=clean(article.querySelector('h2')?.textContent);const summary=clean(article.querySelector('.standard-block p')?.textContent);const context=clean(article.querySelector('.deep-block p:not(.source-note)')?.textContent);if(title&&(summary||context))items.push({title,category:names[j]||'新闻',text:'发生了什么。'+summary+'。背景与影响。'+context})})});if(!items.length)throw Error('未找到新闻文章');state.items=items;setStatus(supported?'已准备好，点击播放开始朗读':'当前浏览器不支持网页朗读');update()}catch(e){setStatus('新闻加载失败：'+e.message);$('nowTitle').textContent='请返回首页重试'}}
+try{
+ const res=await fetch('/feed.xml?audio='+Date.now(),{cache:'no-store'});
+ if(!res.ok)throw Error('RSS HTTP '+res.status);
+ const xml=new DOMParser().parseFromString(await res.text(),'application/xml');
+ if(xml.querySelector('parsererror'))throw Error('RSS 格式错误');
+ const entries=[...xml.querySelectorAll('channel > item')];
+ const names=['国内新闻','国际政治','娱乐文化','消费科技','APPLE'];
+ const items=entries.map((node,i)=>{
+  const field=tag=>clean(node.getElementsByTagName(tag)[0]?.textContent);
+  const title=field('title'),desc=field('description');
+  return {title,category:names[Math.min(4,Math.floor(i/5))],text:desc.replace(/来源：[^\\n]+$/,'').replace(/来龙去脉：/g,'背景与影响。')};
+ }).filter(x=>x.title&&x.text);
+ if(!items.length)throw Error('RSS 中没有可朗读的新闻');
+ state.items=items;
+ const date=xml.querySelector('channel > lastBuildDate')?.textContent||'';
+ const parsed=new Date(date);
+ $('edition').textContent=(Number.isNaN(parsed.getTime())?'今日新闻':new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(parsed))+' · '+items.length+' 篇新闻';
+ setStatus(supported?'已准备好，点击播放开始朗读':'当前浏览器不支持网页朗读');
+ update();
+}catch(e){setStatus('新闻加载失败：'+e.message);$('nowTitle').textContent='请返回首页重试'}
 }
+
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.playing&&!state.paused&&!synth.speaking)setStatus('系统可能已中断朗读；可点停止后重新播放')});
 window.addEventListener('pagehide',()=>{if(supported)synth.cancel()});
 if(!supported)setStatus('当前浏览器不支持 Web Speech API');load();
