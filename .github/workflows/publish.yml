@@ -106,7 +106,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/index.html docs/feed.xml docs/apple-touch-icon.png docs/icon.svg docs/podcast/latest.json docs/podcast/latest.txt
-          git add -A -- 'docs/podcast/*.mp3'
+          git add -A docs/podcast/
           if ! git diff --cached --quiet; then
             git commit -m "Publish daily sourced digest"
             # Another push may land while this workflow generates the edition.
