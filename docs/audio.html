@@ -82,9 +82,9 @@ async function loadPodcast(){
   const res=await fetch('./podcast/latest.json',{cache:'no-store'});
   if(!res.ok)throw Error('播报稿尚未生成');
   const data=await res.json();
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(data.date))throw Error('节目元数据无效');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(data.date))throw Error('节目元数据无效');
   $('podcastTranscript').classList.remove('hidden');
-  if(data.status==='audio_ready'&&/^podcast\\/[a-f0-9]{16}\\.mp3$/.test(data.audio_url||'')){
+  if(data.status==='audio_ready'&&/^podcast\/[a-f0-9]{16}\.mp3$/.test(data.audio_url||'')){
    $('podcastAudio').src='./'+data.audio_url;
    $('podcastAudio').classList.remove('hidden');
    $('podcastStatus').textContent=data.date+' · AI 配音节目已就绪';
