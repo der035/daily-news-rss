@@ -61,9 +61,8 @@ jobs:
           PY
       - name: Prepare source-grounded podcast transcript
         env:
-          # Paid synthesis paused pending cost and duration controls.
-          DASHSCOPE_API_KEY: ''
-          DASHSCOPE_WORKSPACE_ID: ''
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DASHSCOPE_WORKSPACE_ID: ${{ secrets.DASHSCOPE_WORKSPACE_ID }}
           DASHSCOPE_TTS_MODEL: cosyvoice-v3-flash
           DASHSCOPE_TTS_VOICE: longanyang
         run: |
