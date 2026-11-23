@@ -175,7 +175,7 @@ def synthesize(data):
         if not voice and VOICE_CONFIG.exists():
             voice=VOICE_CONFIG.read_text(encoding="utf-8").strip()
     elif model=="qwen-audio-3.1-tts-flash":
-        voice=voice or "longsanshu_v3.1"
+        voice=voice or "longshuo_v3.1"
     else:
         voice=voice or "longanyang"
     if voice and not re.fullmatch(r"[a-zA-Z0-9_.-]{3,128}",voice):
@@ -234,7 +234,7 @@ def synthesize(data):
                 if model=="qwen-audio-3.1-tts-flash":
                     result=client.audio.tts.http.synthesize(
                         text=content,model=model,voice=voice,format="wav",sample_rate=24000,
-                        extra_input={"instruction":"像一位自然聊天的中文播客主持人，按意群连贯讲述，重音自然，停顿短而有层次。"},
+                        extra_input={"instruction":"用清晰、干练的普通话播客新闻口吻，像主持人对着麦克风解释新闻。平实连贯，按意群停顿，重点轻读或自然强调，避免说书腔、拖腔、戏剧化抑扬和逐字停顿。"},
                     )
                     with urllib.request.urlopen(result.audio_url,timeout=45) as response:
                         wave=response.read()
