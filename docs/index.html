@@ -267,11 +267,11 @@ podcastAudio.addEventListener('ended',()=>{podcastStatus.textContent='播放完�
   storyButtons.forEach(button=>{
    const available=!!data.article_audio?.[button.dataset.audioIndex];
    button.disabled=!available;
-   button.nextElementSibling.textContent=available?'点击收听这篇新闻':'本篇音频尚未生成';
+   const note=button.parentElement.querySelector('.story-audio-note');if(note)note.textContent=available?'点击收听这篇新闻':'本篇音频尚未生成';
   });
  }catch(error){
   podcastStatus.textContent='播客暂不可用：'+error.message;
-  storyButtons.forEach(button=>button.nextElementSibling.textContent='本篇音频尚未生成');
+  storyButtons.forEach(button=>{button.disabled=true;const note=button.parentElement.querySelector('.story-audio-note');if(note)note.textContent='本篇音频尚未生成';});
  }
 })();
 })();</script></body></html>
