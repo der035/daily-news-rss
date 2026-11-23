@@ -13,7 +13,6 @@ from pathlib import Path
 import re
 import urllib.request
 import xml.etree.ElementTree as ET
-from xml.sax.saxutils import escape
 
 ROOT=Path(__file__).resolve().parents[1]
 DOCS=ROOT/"docs"
@@ -50,40 +49,54 @@ def build():
     return {"date":date,"edition_id":digest,"status":"transcript_ready","title":f"THE DAILY NOISE · {date}","segments":segments,"sources":sources,"transcript":transcript}
 
 def synthesize(data):
-    key=os.getenv("AZURE_SPEECH_KEY","").strip()
-    region=os.getenv("AZURE_SPEECH_REGION","").strip()
-    if not key or not region:
-        print("No Azure Speech credentials; transcript only.")
+    """Use Alibaba Cloud Model Studio CosyVoice only when explicitly configured."""
+    key=os.getenv("DASHSCOPE_API_KEY","").strip()
+    workspace=os.getenv("DASHSCOPE_WORKSPACE_ID","").strip()
+    if not key or not workspace:
+        print("Alibaba Cloud CosyVoice not configured; transcript only.")
         return
-    if not re.fullmatch(r"[a-z0-9-]+",region):
-        raise ValueError("Invalid Azure Speech region")
-    voice=os.getenv("AZURE_SPEECH_VOICE","zh-CN-XiaoxiaoNeural")
-    if not re.fullmatch(r"[a-zA-Z0-9-]+",voice):
-        raise ValueError("Invalid voice name")
-    # Azure TTS REST accepts bounded SSML; synthesize small segments separately.
-    pieces=[]
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{4,128}",workspace):
+        raise ValueError("Invalid DashScope workspace ID")
+    model=os.getenv("DASHSCOPE_TTS_MODEL","cosyvoice-v3.5-flash")
+    if model not in {"cosyvoice-v3.5-flash","cosyvoice-v3.5-plus"}:
+        raise ValueError("Unsupported CosyVoice model")
+    voice=os.getenv("DASHSCOPE_TTS_VOICE","longanyang")
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{3,80}",voice):
+        raise ValueError("Invalid CosyVoice voice")
+    try:
+        import dashscope
+    except ImportError as exc:
+        raise RuntimeError("Install dashscope>=2.0.1 to synthesize audio") from exc
+    client=dashscope.Client(api_key=key,workspace=workspace,region="cn-beijing")
+    # The official SDK supports 20k characters per call. Each story is
+    # synthesized separately for reliable retries and source traceability.
+    audio_parts=[]
     for segment in data["segments"]:
         text=segment["text"]
-        for j in range(0,len(text),650):
-            chunk=text[j:j+650]
-            ssml=f'<speak version="1.0" xml:lang="zh-CN"><voice name="{voice}">{escape(chunk)}</voice></speak>'
-            req=urllib.request.Request(
-                f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1",
-                data=ssml.encode("utf-8"),
-                headers={"Ocp-Apim-Subscription-Key":key,"Content-Type":"application/ssml+xml","X-Microsoft-OutputFormat":"audio-16khz-128kbitrate-mono-mp3","User-Agent":"DailyNoise/1.0"},
-                method="POST")
-            with urllib.request.urlopen(req,timeout=45) as resp:
-                if resp.headers.get("Content-Type","").split(";")[0]!="audio/mpeg":
-                    raise ValueError("TTS response was not MPEG audio")
-                part=resp.read(5_000_001)
-                if len(part)>5_000_000 or len(part)<100:
-                    raise ValueError("Invalid TTS segment size")
-                pieces.append(part)
-    # MP3 frame streams may be concatenated for sequential playback.
-    mp3=b"".join(pieces)
-    if len(mp3)>24_000_000:
-        raise ValueError("Audio too large for repository publication")
-    (OUT/(data["edition_id"]+".mp3")).write_bytes(mp3)
+        if len(text)>20000:
+            raise ValueError("TTS segment exceeds official 20000-character limit")
+        part=client.audio.tts.synthesize(text,model=model,voice=voice)
+        if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\\xff\\xfb",b"\\xff\\xf3",b"\\xff\\xf2")):
+            raise ValueError("CosyVoice returned invalid MP3 bytes")
+        audio_parts.append(part)
+    # MP3 streams can be joined, but frame and duration correctness must be
+    # verified with ffprobe before making the output public.
+    import subprocess
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        files=[]
+        for i,part in enumerate(audio_parts):
+            p=Path(tmp)/f"segment_{i:03d}.mp3"
+            p.write_bytes(part)
+            files.append(p)
+        concat=Path(tmp)/"concat.txt"
+        concat.write_text("".join(f"file '{p}'\\n" for p in files),encoding="utf-8")
+        target=OUT/(data["edition_id"]+".mp3")
+        subprocess.run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-f","concat","-safe","0","-i",str(concat),"-c","copy","-y",str(target)],check=True,timeout=180)
+        if target.stat().st_size>24_000_000 or target.stat().st_size<1000:
+            target.unlink(missing_ok=True)
+            raise ValueError("MP3 file size outside supported limits")
+        subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","default=noprint_wrappers=1",str(target)],check=True,capture_output=True,timeout=30)
     data["audio_url"]="podcast/"+data["edition_id"]+".mp3"
     data["status"]="audio_ready"
 
