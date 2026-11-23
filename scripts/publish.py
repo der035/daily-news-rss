@@ -671,6 +671,7 @@ button,a,[role="tab"]{touch-action:manipulation}
 @media(max-width:700px){.category-nav button{height:40px!important;min-height:40px!important;padding:4px 1px!important}}
 """
     style += """.site-footer{display:flex;flex-direction:column;gap:12px;padding-top:22px}.footer-main,.footer-signature{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}.footer-signature{padding-top:12px;border-top:1px solid currentColor;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.055em}.footer-signature strong{font-weight:900;font-size:1.2em;letter-spacing:.08em}.footer-version{white-space:nowrap}.footer-update{font-size:12px;opacity:.65}@media(max-width:700px){.footer-signature{font-size:11px;gap:8px}}"""
+    style += """.audio-entry{display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:10px 12px;border:2px solid var(--ink);color:var(--ink)!important;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap}.audio-entry:hover,.audio-entry:focus-visible{background:var(--ink);color:var(--paper)!important}@media(max-width:700px){.audio-entry{padding:7px 8px;font-size:11px}}"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -761,7 +762,7 @@ addEventListener('resize',syncHeight);
             '<link rel="alternate" type="application/rss+xml" href="feed.xml"><style>' + style + '</style></head>'
             '<body><main class="paper">'
             '<header><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button></span><span>独立中文新闻简报</span></header>'
-            '<div class="masthead"><div class="masthead-brand"><span class="masthead-name">THE DAILY <em>NOISE.</em></span><span class="masthead-date">' + date + '</span></div><button type="button" class="toc-open" aria-haspopup="dialog" aria-controls="toc-dialog">文章目录</button></div>'
+            '<div class="masthead"><div class="masthead-brand"><span class="masthead-name">THE DAILY <em>NOISE.</em></span><span class="masthead-date">' + date + '</span></div><a class="audio-entry" href="audio.html" aria-label="打开新闻收听页面">♫ 收听新闻</a><button type="button" class="toc-open" aria-haspopup="dialog" aria-controls="toc-dialog">文章目录</button></div>'
             '<nav class="category-nav" role="tablist" aria-label="新闻栏目">'
             '<button id="tab-0" role="tab" aria-controls="panel-0" aria-selected="true" type="button"><span class="nav-mark nav-domestic" aria-hidden="true"></span><span class="nav-label">国内新闻</span></button>'
             '<button id="tab-1" role="tab" aria-controls="panel-1" aria-selected="false" type="button" tabindex="-1"><span class="nav-mark nav-world" aria-hidden="true"><span></span></span><span class="nav-label">国际政治</span></button>'
