@@ -95,8 +95,8 @@ def synthesize(data):
     import time
     started=time.monotonic()
     for index,segment in enumerate(data["segments"]):
-        if time.monotonic()-started > 600:
-            raise TimeoutError("Podcast TTS exceeded 10-minute budget; stopping additional calls")
+        if time.monotonic()-started > 1500:
+            raise TimeoutError("Podcast TTS exceeded 25-minute budget; stopping additional calls")
         text=segment["text"]
         print(f"Synthesizing segment {index+1}/{len(data['segments'])}: {len(text)} chars",flush=True)
         if len(text)>20000:
