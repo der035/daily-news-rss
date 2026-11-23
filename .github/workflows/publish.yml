@@ -1,6 +1,11 @@
 name: Publish verified daily digest
 on:
   workflow_dispatch:
+    inputs:
+      audio_only:
+        description: Regenerate audio for the currently published edition
+        type: boolean
+        default: false
   schedule:
     # Avoid GitHub Actions top-of-hour congestion (07:50 Beijing time).
     - cron: '50 23 * * *'
@@ -39,8 +44,10 @@ jobs:
           print("note: runner start is not the exact scheduler enqueue time; compare with run created_at via Actions API")
           PY
       - name: Generate Apple home screen icon
+        if: ${{ !inputs.audio_only }}
         run: python3 scripts/make_icon.py
       - name: Generate sourced digest
+        if: ${{ !inputs.audio_only }}
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_MODEL: deepseek-chat
@@ -68,12 +75,14 @@ jobs:
         env:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           DASHSCOPE_WORKSPACE_ID: ${{ secrets.DASHSCOPE_WORKSPACE_ID }}
-          DASHSCOPE_TTS_MODEL: cosyvoice-v3-flash
-          DASHSCOPE_TTS_VOICE: longanyang
+          DASHSCOPE_TTS_MODEL: cosyvoice-v3.5-flash
+          PODCAST_TTS_WORKERS: "4"
         run: |
-          if [ -n "$DASHSCOPE_API_KEY" ] && [ -n "$DASHSCOPE_WORKSPACE_ID" ]; then
-            python3 -m pip install --quiet 'dashscope>=2.0.1'
+          if [ -z "$DASHSCOPE_API_KEY" ] || [ -z "$DASHSCOPE_WORKSPACE_ID" ]; then
+            echo "::error::Missing DashScope credentials for podcast generation"
+            exit 1
           fi
+          python3 -m pip install --quiet 'dashscope>=2.0.1'
           python3 scripts/build_podcast.py
       - name: Validate browser JavaScript syntax
         run: |
@@ -107,6 +116,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/index.html docs/feed.xml docs/apple-touch-icon.png docs/icon.svg docs/podcast/latest.json docs/podcast/latest.txt
           git add -A docs/podcast/
+          if [ -f scripts/cosyvoice-v3.5-flash.voice ]; then
+            git add scripts/cosyvoice-v3.5-flash.voice
+          fi
           if ! git diff --cached --quiet; then
             git commit -m "Publish daily sourced digest"
             # Another push may land while this workflow generates the edition.
