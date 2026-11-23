@@ -175,7 +175,7 @@ def synthesize(data):
         if not voice and VOICE_CONFIG.exists():
             voice=VOICE_CONFIG.read_text(encoding="utf-8").strip()
     elif model=="qwen-audio-3.1-tts-flash":
-        voice=voice or "longanfengyue_v3.1"
+        voice=voice or "longsanshu_v3.1"
     else:
         voice=voice or "longanyang"
     if voice and not re.fullmatch(r"[a-zA-Z0-9_.-]{3,128}",voice):
@@ -211,7 +211,7 @@ def synthesize(data):
             raise ValueError("CosyVoice 3.5 Flash requires a custom voice bound to this model")
     if model in {"cosyvoice-v3.5-flash","qwen-audio-3.1-tts-flash"}:
         # Keep previously published audio URLs intact when regenerating an edition.
-        edition_key=f"{data['edition_id']}:{model}:{voice}"
+        edition_key=f"{data['edition_id']}:{model}:{voice}:story-pauses-v1"
         data["edition_id"]=hashlib.sha256(edition_key.encode()).hexdigest()[:16]
 
     import unicodedata
@@ -277,8 +277,29 @@ def synthesize(data):
             p=Path(tmp)/f"segment_{i:03d}.mp3"
             p.write_bytes(part)
             files.append(p)
+        audio_format=json.loads(subprocess.check_output(
+            ["ffprobe","-v","error","-select_streams","a:0","-show_entries","stream=sample_rate,channels",
+             "-of","json",str(files[0])],timeout=30,
+        ))["streams"][0]
+        pauses={}
+        for seconds in (1.3,2.0):
+            gap=Path(tmp)/f"pause_{seconds}.mp3"
+            channel_layout="mono" if audio_format["channels"]==1 else "stereo"
+            subprocess.run(
+                ["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-f","lavfi",
+                 "-i",f"anullsrc=r={audio_format['sample_rate']}:cl={channel_layout}",
+                 "-t",str(seconds),"-codec:a","libmp3lame","-b:a","64k",str(gap)],
+                check=True,timeout=30,
+            )
+            pauses[seconds]=gap
+        tracks=[]
+        for index,path in enumerate(files):
+            if index>0 and segments[index-1]["type"]==segments[index]["type"]=="story":
+                different_category=segments[index-1]["category"]!=segments[index]["category"]
+                tracks.append(pauses[2.0 if different_category else 1.3])
+            tracks.append(path)
         concat=Path(tmp)/"concat.txt"
-        concat.write_text("".join(f"file '{p}'\n" for p in files),encoding="utf-8")
+        concat.write_text("".join(f"file '{p}'\n" for p in tracks),encoding="utf-8")
         target=OUT/(data["edition_id"]+".mp3")
         subprocess.run(["ffmpeg","-nostdin","-hide_banner","-loglevel","error","-f","concat","-safe","0","-i",str(concat),"-c","copy","-y",str(target)],check=True,timeout=180)
         if target.stat().st_size>24_000_000 or target.stat().st_size<1000:
@@ -289,6 +310,8 @@ def synthesize(data):
     data["article_audio"]={str(i):f"podcast/{data['edition_id']}/article-{i+1:02d}.mp3" for i in story_audio}
     data["status"]="audio_ready"
     data["tts_model"]=model
+    data["tts_voice"]=voice if model=="qwen-audio-3.1-tts-flash" else None
+    data["story_pauses_seconds"]={"same_category":1.3,"new_category":2.0}
     print(f"TTS and MP3 assembly completed in {time.monotonic()-started:.1f}s",flush=True)
 
 def main():
