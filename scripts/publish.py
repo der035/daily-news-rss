@@ -688,6 +688,7 @@ button,a,[role="tab"]{touch-action:manipulation}
     style += """.site-footer{display:flex;flex-direction:column;gap:12px;padding-top:22px}.footer-main,.footer-signature{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}.footer-signature{padding-top:12px;border-top:1px solid currentColor;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.055em}.footer-signature strong{font-weight:900;font-size:1.2em;letter-spacing:.08em}.footer-version{white-space:nowrap}.footer-update{font-size:12px;opacity:.65}@media(max-width:700px){.footer-signature{font-size:11px;gap:8px}}"""
     style += """.audio-entry{display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:10px 12px;border:2px solid var(--ink);color:var(--ink)!important;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap}.audio-entry:hover,.audio-entry:focus-visible{background:var(--ink);color:var(--paper)!important}@media(max-width:700px){.audio-entry{padding:7px 8px;font-size:11px}}"""
     style += """.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.header-actions .audio-entry{font-size:12px;padding:7px 9px;min-height:34px}@media(max-width:700px){.header-actions{gap:7px}.header-actions .audio-entry{font-size:11px;padding:6px 8px}}"""
+    style += """.home-podcast{border:3px solid var(--ink,#111);padding:18px;margin:18px 0 22px;background:var(--paper,#f5f3ed)}.home-podcast[hidden]{display:none!important}.home-podcast-heading{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}.home-podcast-heading span{color:var(--muted,#555)}.home-podcast audio{display:block}.audio-entry{cursor:pointer;background:var(--paper,#f5f3ed);font-family:inherit}.audio-entry[aria-expanded=true]{background:var(--blue,#0639f5);color:#fff!important}"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -772,12 +773,36 @@ const resizeObserver=new ResizeObserver(()=>syncHeight());panels.forEach(p=>resi
 window.addEventListener('load',()=>{goToPanel(currentPanel,false)});
 syncHeight();
 addEventListener('resize',syncHeight);
+
+const podcastToggle=document.getElementById('podcast-toggle');
+const podcastPanel=document.getElementById('home-podcast');
+const podcastAudio=document.getElementById('home-podcast-audio');
+const podcastStatus=document.getElementById('home-podcast-status');
+if(podcastToggle&&podcastPanel&&podcastAudio){
+ podcastToggle.addEventListener('click',async()=>{
+  const opening=podcastPanel.hidden;
+  podcastPanel.hidden=!opening;
+  podcastToggle.setAttribute('aria-expanded',String(opening));
+  if(!opening){podcastAudio.pause();return}
+  if(podcastAudio.getAttribute('src'))return;
+  try{
+   podcastStatus.textContent='正在载入播客…';
+   const response=await fetch('./podcast/latest.json',{cache:'no-store'});
+   if(!response.ok)throw Error('节目资料暂不可用');
+   const data=await response.json();
+   if(data.status!=='audio_ready'||!/^podcast\/[a-f0-9]{16}\.mp3$/.test(data.audio_url||''))throw Error('音频尚未准备好');
+   podcastAudio.src='./'+data.audio_url;
+   podcastStatus.textContent=data.date+' · 播客已就绪，点击下方播放';
+  }catch(error){podcastStatus.textContent='加载失败：'+error.message}
+ });
+}
 })();"""
     page = ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             '<meta name="theme-color" content="#0639f5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="DAILY NOISE"><link rel="icon" type="image/svg+xml" href="icon.svg"><link rel="apple-touch-icon" href="apple-touch-icon.png"><title>THE DAILY NOISE — ' + date + '</title>'
             '<link rel="alternate" type="application/rss+xml" href="feed.xml"><style>' + style + '</style></head>'
             '<body><main class="paper">'
-            '<header><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button><a class="audio-entry" href="audio.html" aria-label="打开新闻收听页面">♫ 收听新闻</a></span><span>独立中文新闻简报</span></header>'
+            '<header><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button><button class="audio-entry" id="podcast-toggle" type="button" aria-expanded="false" aria-controls="home-podcast">▶ 今日播客</button></span><span>独立中文新闻简报</span></header>'
+            '<section id="home-podcast" class="home-podcast" hidden><div class="home-podcast-heading"><strong>THE DAILY NOISE / PODCAST</strong><span id="home-podcast-status">正在检查今日节目…</span></div><audio id="home-podcast-audio" controls preload="metadata" playsinline style="width:100%" aria-label="每日新闻播客"></audio></section>'
             '<div class="masthead"><div class="masthead-brand"><span class="masthead-name">THE DAILY <em>NOISE.</em></span><span class="masthead-date">' + date + '</span></div><button type="button" class="toc-open" aria-haspopup="dialog" aria-controls="toc-dialog">文章目录</button></div>'
             '<nav class="category-nav" role="tablist" aria-label="新闻栏目">'
             '<button id="tab-0" role="tab" aria-controls="panel-0" aria-selected="true" type="button"><span class="nav-mark nav-domestic" aria-hidden="true"></span><span class="nav-label">国内新闻</span></button>'
