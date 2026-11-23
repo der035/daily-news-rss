@@ -438,6 +438,8 @@ def generate(items):
         if len(candidates) < STORIES_PER_CATEGORY:
             raise ValueError("Insufficient fresh stories for " + category)
         category_output = []
+        direct = [item for item in candidates if item.get("source_role") not in (None, "交叉核实")]
+        use_diverse_desks = category == "国内新闻" and len(direct) >= 8 and len({item["publisher"] for item in direct}) >= 2
         for attempt in range(3):
             used = {src["url"] for article in category_output for src in article["sources"]}
             remaining = [item for item in candidates if item["url"] not in used]
@@ -451,6 +453,8 @@ def generate(items):
                 json.dumps([a["title"] for a in output + category_output], ensure_ascii=False) +
                 "\n可选素材：" + json.dumps(remaining, ensure_ascii=False)
             )
+            if use_diverse_desks:
+                prompt += "\n有足够原站报道时，中国新闻网最多担任两篇主来源。至少三篇用候选中的官方、财经、民生原站报道做主来源，优先选同事件有配图的优质报道。"
             data = ask([{"role": "system", "content": instructions},
                         {"role": "user", "content": prompt}])
             new = validate(data.get("articles", []))
@@ -461,6 +465,9 @@ def generate(items):
                 # Exact-title guard supplements the editorial duplicate instruction.
                 key_title = re.sub(r"[^\w\u4e00-\u9fff]", "", article["title"])
                 if any(re.sub(r"[^\w\u4e00-\u9fff]", "", old["title"]) == key_title for old in category_output):
+                    continue
+                if (use_diverse_desks and article["publisher"].startswith("中国新闻网") and
+                        sum(old["publisher"].startswith("中国新闻网") for old in category_output) >= 2):
                     continue
                 category_output.append(article)
                 used_ids.update(src["url"] for src in article["sources"])
