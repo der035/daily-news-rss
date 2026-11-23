@@ -240,7 +240,7 @@ function playStory(index){
 }
 podcastToggle.addEventListener('click',()=>{
  if(!podcastData||podcastData.status!=='audio_ready'){podcastPanel.hidden=false;podcastStatus.textContent='今日音频尚未准备好';return}
- if(activeIndex===null&&podcastAudio.getAttribute('src')===null){
+ if(activeIndex!==-1){
   setPodcastSource(podcastData.audio_url,'今日全部新闻 · '+podcastData.date,-1);
  }
  if(!podcastAudio.paused){podcastAudio.pause();return}
