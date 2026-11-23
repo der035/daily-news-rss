@@ -289,7 +289,22 @@ def generate(items):
         # json_object mode. Retry the *same* editorial request; never publish
         # guessed/repaired article data.
         for json_attempt in range(3):
-            with urllib.request.urlopen(req, timeout=120) as response:
+            retry_messages = messages if json_attempt == 0 else messages + [
+                {"role": "user", "content": (
+                    "上一轮输出无法解析为 JSON。请重新完成同一任务，"
+                    "只返回严格合法的 JSON 对象，键名必须用英文双引号，"
+                    "不得使用单引号、注释、尾随逗号或 Markdown 代码块。"
+                    "确保完整输出 articles 数组。"
+                )}
+            ]
+            retry_payload = dict(payload, messages=retry_messages)
+            retry_req = urllib.request.Request(
+                "https://api.deepseek.com/chat/completions",
+                data=json.dumps(retry_payload, ensure_ascii=False).encode("utf-8"),
+                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(retry_req, timeout=120) as response:
                 result = json.load(response)
             choice = result["choices"][0]
             content = choice.get("message", {}).get("content", "")
