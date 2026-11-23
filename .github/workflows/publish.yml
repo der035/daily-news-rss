@@ -59,6 +59,8 @@ jobs:
           assert html.count('class="category-panel"') == 5, 'Expected five category panels'
           assert html.count('class="story"') == 25, 'Expected twenty-five article cards'
           PY
+      - name: Prepare source-grounded podcast transcript
+        run: python3 scripts/build_podcast.py
       - name: Validate browser JavaScript syntax
         run: |
           python3 - <<'PY'
@@ -89,7 +91,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/feed.xml docs/apple-touch-icon.png docs/icon.svg
+          git add docs/index.html docs/feed.xml docs/apple-touch-icon.png docs/icon.svg docs/podcast/latest.json docs/podcast/latest.txt
           if ! git diff --cached --quiet; then
             git commit -m "Publish daily sourced digest"
             # Another push may land while this workflow generates the edition.
