@@ -18,6 +18,26 @@ ROOT=Path(__file__).resolve().parents[1]
 DOCS=ROOT/"docs"
 OUT=DOCS/"podcast"
 CATEGORIES=("国内新闻","国际政治","娱乐文化","消费科技","Apple")
+def spoken_summary(description, limit=190):
+    """Use only complete source-grounded sentences."""
+    description=re.sub(r"\n来源：[^\n]*$", "", description)
+    description=re.sub(r"^(?:来龙去脉|背景与影响|摘要)[:：]\s*", "", description.strip())
+    description=re.sub(r"\s+", " ", description).strip()
+    sentences=re.split(r"(?<=[。！？!?])\s*", description)
+    chosen=[]
+    for sentence in sentences:
+        if not sentence:
+            continue
+        if len("".join(chosen))+len(sentence)>limit:
+            break
+        chosen.append(sentence)
+    if not chosen:
+        match=re.search(r"^.*?[。！？!?]", description)
+        if not match:
+            raise ValueError("Article has no complete sentence for narration")
+        chosen=[match.group(0)]
+    return "".join(chosen)
+
 def build():
     root=ET.parse(DOCS/"feed.xml").getroot()
     channel=root.find("channel")
@@ -26,8 +46,7 @@ def build():
         raise ValueError("Refusing incomplete edition: expected 25 articles")
     stamp=email.utils.parsedate_to_datetime(channel.findtext("lastBuildDate"))
     date=stamp.astimezone(dt.timezone(dt.timedelta(hours=8))).strftime("%Y-%m-%d")
-    segments=[]
-    segments.append({"type":"opening","text":f"欢迎收听每日噪音。今天是{date}。接下来为你梳理今天的重要新闻。"})
+    segments=[{"type":"opening","text":f"欢迎收听每日噪音。今天是{date}。咱们来看看今天有哪些值得关注的事。"}]
     sources=[]
     for i,item in enumerate(items):
         title=(item.findtext("title") or "").strip()
@@ -36,20 +55,15 @@ def build():
         if not title or not desc or not url.startswith("https://"):
             raise ValueError(f"Invalid article {i+1}")
         category=CATEGORIES[i//5]
-        if i%5==0:
-            segments.append({"type":"category","text":f"下面是{category}。"})
-        # No LLM rewriting: preserve source-grounded summary and background verbatim.
-        desc=re.sub(r"\n来源：[^\n]*$","",desc).replace("来龙去脉：","背景与影响：")
-        desc=re.sub(r"\s+"," ",desc).strip()
-        # Audio edition: two lead stories per category, with bounded narration.
-        if i%5 < 2:
-            segments.append({"type":"story","category":category,"title":title,"source_url":url,"text":title+"。"+desc[:360]})
+        spoken=spoken_summary(desc)
+        intro="先说" if i%5==0 else "再来看"
+        segments.append({"type":"story","article_index":i,"category":category,"title":title,"source_url":url,"text":f"{intro}这条。{title}。{spoken}"})
         sources.append({"title":title,"url":url,"category":category})
-    segments.append({"type":"closing","text":"以上是今天的新闻简报。详细报道与原始来源，请在每日噪音网站查看。感谢收听。"})
+    segments.append({"type":"closing","text":"以上就是今天的每日噪音。想看更完整的报道和来源，可以打开网站。明天见。"})
     total_chars=sum(len(x["text"]) for x in segments)
-    if total_chars > 5500:
-        raise ValueError(f"Podcast exceeds 5500-character budget: {total_chars}")
-    print(f"Podcast character budget: {total_chars}/5500; {len(segments)} segments")
+    if total_chars > 7000:
+        raise ValueError(f"Podcast exceeds 7000-character budget: {total_chars}")
+    print(f"Podcast character budget: {total_chars}/7000; {len(segments)} segments")
     transcript="\n\n".join(x["text"] for x in segments)
     digest=hashlib.sha256((date+"\n"+transcript).encode()).hexdigest()[:16]
     return {"date":date,"edition_id":digest,"status":"transcript_ready","title":f"THE DAILY NOISE · {date}","segments":segments,"sources":sources,"transcript":transcript}
@@ -77,6 +91,7 @@ def synthesize(data):
     # The official SDK supports 20k characters per call. Each story is
     # synthesized separately for reliable retries and source traceability.
     audio_parts=[]
+    story_audio={}
     import time
     started=time.monotonic()
     for index,segment in enumerate(data["segments"]):
@@ -90,10 +105,16 @@ def synthesize(data):
         if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\xff\xfb",b"\xff\xf3",b"\xff\xf2")):
             raise ValueError("CosyVoice returned invalid MP3 bytes")
         audio_parts.append(part)
+        if segment['type']=='story':
+            story_audio[segment['article_index']]=part
     # MP3 streams can be joined, but frame and duration correctness must be
     # verified with ffprobe before making the output public.
     import subprocess
     import tempfile
+    edition_dir=OUT/data['edition_id']
+    edition_dir.mkdir(parents=True,exist_ok=True)
+    for article_index,part in story_audio.items():
+        (edition_dir/f'article-{article_index+1:02d}.mp3').write_bytes(part)
     with tempfile.TemporaryDirectory() as tmp:
         files=[]
         for i,part in enumerate(audio_parts):
@@ -109,6 +130,7 @@ def synthesize(data):
             raise ValueError("MP3 file size outside supported limits")
         subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","default=noprint_wrappers=1",str(target)],check=True,capture_output=True,timeout=30)
     data["audio_url"]="podcast/"+data["edition_id"]+".mp3"
+    data["article_audio"]={str(i):f"podcast/{data['edition_id']}/article-{i+1:02d}.mp3" for i in story_audio}
     data["status"]="audio_ready"
 
 def main():
