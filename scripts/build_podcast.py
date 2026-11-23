@@ -18,6 +18,7 @@ import xml.etree.ElementTree as ET
 ROOT=Path(__file__).resolve().parents[1]
 DOCS=ROOT/"docs"
 OUT=DOCS/"podcast"
+VOICE_CONFIG=ROOT/"scripts"/"cosyvoice-v3.5-flash.voice"
 CATEGORIES=("国内新闻","国际政治","娱乐文化","消费科技","Apple")
 def spoken_summary(description, limit=190):
     """Use only complete source-grounded sentences."""
@@ -79,10 +80,15 @@ def synthesize(data):
     if not re.fullmatch(r"[a-zA-Z0-9_-]{4,128}",workspace):
         raise ValueError("Invalid DashScope workspace ID")
     model=os.getenv("DASHSCOPE_TTS_MODEL","cosyvoice-v3-flash")
-    if model not in {"cosyvoice-v3-flash","cosyvoice-v3-plus"}:
+    if model not in {"cosyvoice-v3-flash","cosyvoice-v3-plus","cosyvoice-v3.5-flash"}:
         raise ValueError("Unsupported CosyVoice model")
-    voice=os.getenv("DASHSCOPE_TTS_VOICE","longanyang")
-    if not re.fullmatch(r"[a-zA-Z0-9_-]{3,80}",voice):
+    voice=os.getenv("DASHSCOPE_TTS_VOICE","").strip()
+    if model=="cosyvoice-v3.5-flash":
+        if not voice and VOICE_CONFIG.exists():
+            voice=VOICE_CONFIG.read_text(encoding="utf-8").strip()
+    else:
+        voice=voice or "longanyang"
+    if voice and not re.fullmatch(r"[a-zA-Z0-9_.-]{3,128}",voice):
         raise ValueError("Invalid CosyVoice voice")
     try:
         import dashscope
@@ -97,6 +103,32 @@ def synthesize(data):
     workers=int(os.getenv("PODCAST_TTS_WORKERS","4"))
     if not 1 <= workers <= 6:
         raise ValueError("PODCAST_TTS_WORKERS must be between 1 and 6")
+    if model=="cosyvoice-v3.5-flash":
+        if not voice:
+            client=dashscope.Client(api_key=key,workspace=workspace,region="cn-beijing")
+            voice=client.audio.voice_design.create(
+                target_model=model,
+                voice_prompt="青年男性新闻播音员，普通话吐字清晰，音调适中，语速平稳，读英文品牌名时自然，像在给朋友讲新闻。",
+                preview_text="欢迎收听每日噪音。今天我们关注国际新闻、文化和科技。",
+                prefix="dailynews",
+                language_hints=["zh"],
+            ).voice_id
+            if not voice.startswith(model+"-vd-"):
+                raise ValueError("Unexpected voice ID for CosyVoice 3.5 Flash")
+            VOICE_CONFIG.write_text(voice+"\n",encoding="utf-8")
+        if not voice.startswith(model+"-"):
+            raise ValueError("CosyVoice 3.5 Flash requires a custom voice bound to this model")
+        # Keep previously published audio URLs intact when regenerating an edition.
+        edition_key=f"{data['edition_id']}:{model}:{voice}"
+        data["edition_id"]=hashlib.sha256(edition_key.encode()).hexdigest()[:16]
+
+    import unicodedata
+    billed_chars=sum(
+        1+unicodedata.name(char,"").startswith(("CJK UNIFIED IDEOGRAPH","CJK COMPATIBILITY IDEOGRAPH"))
+        for segment in segments for char in segment["text"]
+    )
+    print(f"TTS model: {model}; estimated billable characters for one pass: {billed_chars}",flush=True)
+
     def generate(index, segment):
         content=segment["text"]
         if len(content)>20000:
@@ -108,7 +140,7 @@ def synthesize(data):
             try:
                 print(f"Synthesizing segment {index+1}/{len(segments)} (attempt {attempt+1}): {len(content)} chars",flush=True)
                 part=client.audio.tts.synthesize(content,model=model,voice=voice)
-                if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\\xff\\xfb",b"\\xff\\xf3",b"\\xff\\xf2")):
+                if not isinstance(part,bytes) or not part.startswith((b"ID3",b"\xff\xfb",b"\xff\xf3",b"\xff\xf2")):
                     raise ValueError("CosyVoice returned invalid MP3 bytes")
                 return index,part
             except Exception as exc:
@@ -151,6 +183,8 @@ def synthesize(data):
     data["audio_url"]="podcast/"+data["edition_id"]+".mp3"
     data["article_audio"]={str(i):f"podcast/{data['edition_id']}/article-{i+1:02d}.mp3" for i in story_audio}
     data["status"]="audio_ready"
+    data["tts_model"]=model
+    print(f"TTS and MP3 assembly completed in {time.monotonic()-started:.1f}s",flush=True)
 
 def main():
     data=build()
