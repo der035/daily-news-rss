@@ -1,3 +1,6 @@
+## 服务商决定（2026-11-23）
+已选择阿里云百炼 CosyVoice。默认 cosyvoice-v3.5-flash、longanyang、华北2（北京）。Azure 接口已从程序移除。工作流仅在 GitHub Secrets 同时存在 DASHSCOPE_API_KEY 与 DASHSCOPE_WORKSPACE_ID 时安装 SDK 并尝试生成 MP3；否则只生成播报稿，不产生 TTS 调用费用。真实合成和 iPhone 播放仍待授权验收。音频现阶段提交到 GitHub，文件大小上限 24MB，未来规模扩大时应迁移至对象存储。
+
 ## 实施状态（2026-11-23）
 - 已新增 scripts/build_podcast.py：从当前 docs/feed.xml 的 25 条新闻生成来源可追溯的中文播报稿；不虚构主持人采访或补充未经证实的事实。
 - 已将播报稿构建接入 publish.yml；成功生成新闻后会提交 docs/podcast/latest.json 与 latest.txt。
