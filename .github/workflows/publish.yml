@@ -17,6 +17,27 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Diagnose scheduler timing
+        env:
+          GH_EVENT_NAME: ${{ github.event_name }}
+          GH_EVENT_SCHEDULE: ${{ github.event.schedule }}
+          GH_RUN_ID: ${{ github.run_id }}
+          GH_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GH_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import datetime
+          import os
+          now = datetime.datetime.now(datetime.timezone.utc)
+          print("event_name:", os.environ.get("GH_EVENT_NAME"))
+          print("event_schedule:", os.environ.get("GH_EVENT_SCHEDULE") or "(none)")
+          print("run_id:", os.environ.get("GH_RUN_ID"))
+          print("run_attempt:", os.environ.get("GH_RUN_ATTEMPT"))
+          print("commit_sha:", os.environ.get("GH_SHA"))
+          print("runner_started_utc:", now.isoformat())
+          print("runner_started_beijing:", now.astimezone(datetime.timezone(datetime.timedelta(hours=8))).isoformat())
+          print("note: runner start is not the exact scheduler enqueue time; compare with run created_at via Actions API")
+          PY
       - name: Generate Apple home screen icon
         run: python3 scripts/make_icon.py
       - name: Generate sourced digest
