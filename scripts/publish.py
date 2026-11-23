@@ -532,6 +532,7 @@ def render(articles, version):
             '<div class="standard-block"><h3>发生了什么？</h3><p>' + focus_text(summary, article_context, article_entities, seen_terms) + '</p></div>'
             '<div class="deep-block"><h3>背景与影响</h3><p>' + focus_text(context, article_context, article_entities, seen_terms) + '</p>'
             '<p class="source-note">背景解读依据已获取的新闻材料整理，不代表对未来结果的确定预测。</p></div>'
+            '<div class="story-audio"><button type="button" class="story-play" data-audio-index="' + str(i) + '" disabled aria-label="播放本篇新闻">▶ 播放本篇</button><span class="story-audio-note">音频准备中</span></div>'
             '<div class="story-bottom"><div class="source-links"><span>核对原始报道：</span>' + source_links + '</div>'
             '<button type="button" class="share-story" aria-label="分享这篇新闻的文字内容"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7 8m5-5 5 5M5 14v6h14v-6"/></svg> 分享文章</button></div></article>'
         )
@@ -689,6 +690,7 @@ button,a,[role="tab"]{touch-action:manipulation}
     style += """.audio-entry{display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:10px 12px;border:2px solid var(--ink);color:var(--ink)!important;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap}.audio-entry:hover,.audio-entry:focus-visible{background:var(--ink);color:var(--paper)!important}@media(max-width:700px){.audio-entry{padding:7px 8px;font-size:11px}}"""
     style += """.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.header-actions .audio-entry{font-size:12px;padding:7px 9px;min-height:34px}@media(max-width:700px){.header-actions{gap:7px}.header-actions .audio-entry{font-size:11px;padding:6px 8px}}"""
     style += """.home-podcast{border:3px solid var(--ink,#111);padding:18px;margin:18px 0 22px;background:var(--paper,#f5f3ed)}.home-podcast[hidden]{display:none!important}.home-podcast-heading{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}.home-podcast-heading span{color:var(--muted,#555)}.home-podcast audio{display:block}.audio-entry{cursor:pointer;background:var(--paper,#f5f3ed);font-family:inherit}.audio-entry[aria-expanded=true]{background:var(--blue,#0639f5);color:#fff!important}"""
+    style += """.story-audio{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0}.story-play{border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-weight:850;padding:11px 16px;cursor:pointer}.story-play:disabled{opacity:.5;cursor:not-allowed}.story-play[aria-pressed=true]{background:var(--blue);color:#fff}.story-audio-note{font-size:12px;color:var(--muted)}"""
     script = r"""(function(){
 const root=document.body;
 const glossaryDialog=document.querySelector('#term-dialog');
@@ -778,30 +780,72 @@ const podcastToggle=document.getElementById('podcast-toggle');
 const podcastPanel=document.getElementById('home-podcast');
 const podcastAudio=document.getElementById('home-podcast-audio');
 const podcastStatus=document.getElementById('home-podcast-status');
-if(podcastToggle&&podcastPanel&&podcastAudio){
- podcastToggle.addEventListener('click',async()=>{
-  const opening=podcastPanel.hidden;
-  podcastPanel.hidden=!opening;
-  podcastToggle.setAttribute('aria-expanded',String(opening));
-  if(!opening){podcastAudio.pause();return}
-  if(podcastAudio.getAttribute('src'))return;
-  try{
-   podcastStatus.textContent='正在载入播客…';
-   const response=await fetch('./podcast/latest.json',{cache:'no-store'});
-   if(!response.ok)throw Error('节目资料暂不可用');
-   const data=await response.json();
-   if(data.status!=='audio_ready'||!/^podcast\/[a-f0-9]{16}\.mp3$/.test(data.audio_url||''))throw Error('音频尚未准备好');
-   podcastAudio.src='./'+data.audio_url;
-   podcastStatus.textContent=data.date+' · 播客已就绪，点击下方播放';
-  }catch(error){podcastStatus.textContent='加载失败：'+error.message}
+const storyButtons=[...document.querySelectorAll('.story-play')];
+let podcastData=null;
+let activeIndex=null;
+function setPodcastSource(url,label,index){
+ if(!url)return;
+ if(activeIndex!==index||!podcastAudio.getAttribute('src')||podcastAudio.getAttribute('src')!=='./'+url){
+  podcastAudio.pause();
+  podcastAudio.src='./'+url;
+  podcastAudio.load();
+ }
+ activeIndex=index;
+ podcastPanel.hidden=false;
+ podcastToggle.setAttribute('aria-expanded','true');
+ podcastStatus.textContent=label;
+ storyButtons.forEach(button=>{
+  const current=Number(button.dataset.audioIndex)===index;
+  button.textContent=current?'Ⅱ 正在播放':'▶ 播放本篇';
+  button.setAttribute('aria-pressed',String(current));
  });
 }
+function playStory(index){
+ if(!podcastData||!podcastData.article_audio)return;
+ const url=podcastData.article_audio[String(index)];
+ if(!url)return;
+ const story=document.getElementById('story-'+index);
+ const title=story?.querySelector('h2')?.textContent||'本篇新闻';
+ if(activeIndex===index&&!podcastAudio.paused){podcastAudio.pause();return}
+ setPodcastSource(url,'正在播放：'+title,index);
+ podcastAudio.play().catch(()=>{podcastStatus.textContent='请点击播放器中的播放按钮开始收听'});
+}
+podcastToggle.addEventListener('click',()=>{
+ if(!podcastData||podcastData.status!=='audio_ready'){podcastPanel.hidden=false;podcastStatus.textContent='今日音频尚未准备好';return}
+ if(activeIndex===null&&podcastAudio.getAttribute('src')===null){
+  setPodcastSource(podcastData.audio_url,'今日全部新闻 · '+podcastData.date,-1);
+ }
+ if(!podcastAudio.paused){podcastAudio.pause();return}
+ podcastAudio.play().catch(()=>{podcastStatus.textContent='请点击播放器中的播放按钮开始收听'});
+});
+storyButtons.forEach(button=>button.addEventListener('click',()=>playStory(Number(button.dataset.audioIndex))));
+podcastAudio.addEventListener('pause',()=>{storyButtons.forEach(b=>{b.textContent='▶ 播放本篇';b.setAttribute('aria-pressed','false')})});
+podcastAudio.addEventListener('ended',()=>{podcastStatus.textContent='播放完毕';storyButtons.forEach(b=>b.textContent='▶ 播放本篇')});
+(async()=>{
+ try{
+  const response=await fetch('./podcast/latest.json',{cache:'no-store'});
+  if(!response.ok)throw Error('节目资料暂不可用');
+  const data=await response.json();
+  if(data.status!=='audio_ready'||!/^podcast\/[a-f0-9]{16}\.mp3$/.test(data.audio_url||''))throw Error('完整节目尚未生成');
+  podcastData=data;
+  podcastToggle.textContent='▶ 一键播放全部';
+  podcastStatus.textContent=data.date+' · 全部新闻可收听';
+  storyButtons.forEach(button=>{
+   const available=!!data.article_audio?.[button.dataset.audioIndex];
+   button.disabled=!available;
+   button.nextElementSibling.textContent=available?'点击收听这篇新闻':'本篇音频尚未生成';
+  });
+ }catch(error){
+  podcastStatus.textContent='播客暂不可用：'+error.message;
+  storyButtons.forEach(button=>button.nextElementSibling.textContent='本篇音频尚未生成');
+ }
+})();
 })();"""
     page = ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             '<meta name="theme-color" content="#0639f5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="DAILY NOISE"><link rel="icon" type="image/svg+xml" href="icon.svg"><link rel="apple-touch-icon" href="apple-touch-icon.png"><title>THE DAILY NOISE — ' + date + '</title>'
             '<link rel="alternate" type="application/rss+xml" href="feed.xml"><style>' + style + '</style></head>'
             '<body><main class="paper">'
-            '<header><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button><button class="audio-entry" id="podcast-toggle" type="button" aria-expanded="false" aria-controls="home-podcast">▶ 今日播客</button></span><span>独立中文新闻简报</span></header>'
+            '<header><span class="header-actions"><button class="theme-toggle" type="button" aria-label="切换到午夜模式">午夜模式</button><button class="audio-entry" id="podcast-toggle" type="button" aria-expanded="false" aria-controls="home-podcast">▶ 一键播放全部</button></span><span>独立中文新闻简报</span></header>'
             '<section id="home-podcast" class="home-podcast" hidden><div class="home-podcast-heading"><strong>THE DAILY NOISE / PODCAST</strong><span id="home-podcast-status">正在检查今日节目…</span></div><audio id="home-podcast-audio" controls preload="metadata" playsinline style="width:100%" aria-label="每日新闻播客"></audio></section>'
             '<div class="masthead"><div class="masthead-brand"><span class="masthead-name">THE DAILY <em>NOISE.</em></span><span class="masthead-date">' + date + '</span></div><button type="button" class="toc-open" aria-haspopup="dialog" aria-controls="toc-dialog">文章目录</button></div>'
             '<nav class="category-nav" role="tablist" aria-label="新闻栏目">'
