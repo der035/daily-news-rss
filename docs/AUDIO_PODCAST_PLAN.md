@@ -1,3 +1,11 @@
+## 实施状态（2026-11-23）
+- 已新增 scripts/build_podcast.py：从当前 docs/feed.xml 的 25 条新闻生成来源可追溯的中文播报稿；不虚构主持人采访或补充未经证实的事实。
+- 已将播报稿构建接入 publish.yml；成功生成新闻后会提交 docs/podcast/latest.json 与 latest.txt。
+- audio.html 已支持显示播报稿状态，并在未来 audio_ready 时使用原生 HTML audio 播放 MP3。
+- Azure Speech 合成函数已实现，但 **生产工作流尚未注入 Azure 凭证，因此不会生成音频或产生 TTS 费用**。音频文件拼接、真实 iOS 播放和成本尚未验收。
+- 下一步需要用户授权/提供 Azure Speech 区域及 API 密钥（GitHub Actions secrets），或明确选择其他 TTS 供应商；之后才能进行真实合成、计费和端到端验收。
+- 目前播报稿采用忠实新闻转述而非 LLM 创作的双人播客剧本，避免未验证的改写。10–15 分钟时长尚未保证。
+
 # THE DAILY NOISE — AI 播客第二阶段设计
 
 状态：规划中，尚未接入 TTS 服务、生成音频或启用定时音频发布。
