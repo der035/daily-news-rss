@@ -77,7 +77,7 @@ jobs:
           DEEPSEEK_MODEL: deepseek-chat
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           DASHSCOPE_WORKSPACE_ID: ${{ secrets.DASHSCOPE_WORKSPACE_ID }}
-          DASHSCOPE_TTS_MODEL: cosyvoice-v3.5-flash
+          DASHSCOPE_TTS_MODEL: qwen-audio-3.1-tts-flash
           PODCAST_TTS_WORKERS: "4"
         run: |
           if [ -z "$DASHSCOPE_API_KEY" ] || [ -z "$DASHSCOPE_WORKSPACE_ID" ]; then
