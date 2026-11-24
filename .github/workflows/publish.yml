@@ -2,6 +2,10 @@ name: Publish verified daily digest
 on:
   workflow_dispatch:
     inputs:
+      preview_only:
+        description: Generate and review an edition without publishing or synthesizing audio
+        type: boolean
+        default: false
       audio_only:
         description: Regenerate audio for the currently published edition
         type: boolean
@@ -47,7 +51,7 @@ jobs:
         if: ${{ !inputs.audio_only }}
         run: python3 scripts/make_icon.py
       - name: Generate and review sourced digest
-        if: ${{ !inputs.audio_only }}
+        if: ${{ inputs.preview_only || !inputs.audio_only }}
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_MODEL: deepseek-chat
@@ -69,11 +73,13 @@ jobs:
           assert html.count('class="story"') == 25, 'Expected twenty-five article cards'
           PY
       - name: Install audio tools
+        if: ${{ !inputs.preview_only }}
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg
           ffmpeg -version | head -n 1
       - name: Prepare source-grounded podcast transcript
+        if: ${{ !inputs.preview_only }}
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_MODEL: deepseek-chat
@@ -115,6 +121,7 @@ jobs:
           PY
           node --check /tmp/daily-news-inline.js
       - name: Commit publication
+        if: ${{ !inputs.preview_only }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
