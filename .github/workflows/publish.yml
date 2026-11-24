@@ -2,6 +2,10 @@ name: Publish verified daily digest
 on:
   workflow_dispatch:
     inputs:
+      vision_check_only:
+        description: Check the visual review connection using known news photos
+        type: boolean
+        default: false
       preview_only:
         description: Generate and review an edition without publishing or synthesizing audio
         type: boolean
@@ -20,6 +24,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
+    if: ${{ !inputs.vision_check_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -151,3 +156,27 @@ jobs:
             echo "::error::Could not push publication after five retries"
             exit 1
           fi
+
+  verify-vision:
+    if: ${{ inputs.vision_check_only }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the live image reviewer
+        env:
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          DASHSCOPE_WORKSPACE_ID: ${{ secrets.DASHSCOPE_WORKSPACE_ID }}
+        run: |
+          PYTHONPATH=scripts python3 - <<'PY'
+          from editorial_review import review_image, vision_connection
+          url, key, model = vision_connection()
+          assert url, "No configured image-review model answered the live image probe"
+          article = {"title": "各地拓宽住房公积金使用范围", "summary": "央视报道多地调整住房公积金用途和办理服务。"}
+          unrelated = "https://imgcdn.cna.com.tw/www/WebPhotos/1024/20261123/1152x768_wmky_0_C20261123000145.jpg"
+          relevant = "https://p1.img.cntv.cn/photoworkspace/contentimg/2026/11/23/2026112319595746517.jpg"
+          source = {"title": article["title"], "publisher": "央视网", "url": "https://news.cctv.cn/2026/11/23/ARTIqOLhFXOiHJDEO5LDeiNs261123.shtml", "body_images": [unrelated, relevant]}
+          result = review_image(article, [source], url, key, model=model)
+          assert result and result[0][0] == relevant, "Live image reviewer did not distinguish the matching image"
+          print("Live reviewer rejects the unrelated signing photo and selects the matching CCTV report frame.")
+          PY
