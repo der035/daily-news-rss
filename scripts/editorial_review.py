@@ -1,11 +1,15 @@
 """Prepublication review for sourced stories and candidate photographs."""
 from concurrent.futures import ThreadPoolExecutor
+import base64
+from ipaddress import ip_address
 import json
 import os
 import re
+import socket
+import ssl
 import time
 from urllib.parse import urlsplit, urlunsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPSHandler, HTTPRedirectHandler, Request, build_opener, urlopen
 from urllib.error import HTTPError
 
 TEXT_URL = "https://api.deepseek.com/chat/completions"
@@ -104,6 +108,43 @@ def candidate_images(sources):
                 yield url, source
 
 
+def public_image_host(url):
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.port not in (None, 443):
+        raise ValueError("Invalid image URL")
+    addresses = socket.getaddrinfo(parsed.hostname, 443, type=socket.SOCK_STREAM)
+    if not addresses or any(not ip_address(address[4][0]).is_global for address in addresses):
+        raise ValueError("Image hostname resolves to a non-public address")
+
+
+class PublicImageRedirects(HTTPRedirectHandler):
+    max_redirections = 3
+
+    def redirect_request(self, request, fp, code, msg, headers, newurl):
+        public_image_host(newurl)
+        return super().redirect_request(request, fp, code, msg, headers, newurl)
+
+
+def load_image(url):
+    public_image_host(url)
+    request = Request(url, headers={"User-Agent": "TheDailyNoise/1.0", "Accept": "image/*"})
+    opener = build_opener(PublicImageRedirects(), HTTPSHandler(context=ssl.create_default_context()))
+    limit = 5 * 1024 * 1024
+    with opener.open(request, timeout=10) as response:
+        data = response.read(limit + 1)
+    if len(data) > limit:
+        raise ValueError("Image exceeds review size limit")
+    if data.startswith(b"\xff\xd8\xff"):
+        mime = "image/jpeg"
+    elif data.startswith(b"\x89PNG\r\n\x1a\n"):
+        mime = "image/png"
+    elif data.startswith(b"RIFF") and data[8:12] == b"WEBP":
+        mime = "image/webp"
+    else:
+        raise ValueError("Unsupported image data")
+    return f"data:{mime};base64," + base64.b64encode(data).decode("ascii")
+
+
 def review_image(article, sources, url, key, excluded=(), model="qwen3-vl-flash"):
     accepted = []
     if not key or not url:
@@ -126,7 +167,7 @@ def review_image(article, sources, url, key, excluded=(), model="qwen3-vl-flash"
         )
         try:
             result = chat(url, key, model, [{"role": "user", "content": [
-                {"type": "image_url", "image_url": {"url": image}},
+                {"type": "image_url", "image_url": {"url": load_image(image)}},
                 {"type": "text", "text": prompt},
             ]}], temperature=0.1, max_tokens=380)
             caption = result.get("caption")
@@ -153,11 +194,16 @@ def vision_connection():
         endpoints.insert(0, f"https://{workspace}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions")
     probe_image = "https://p1.img.cntv.cn/photoworkspace/contentimg/2026/11/23/2026112319595746517.jpg"
     if key:
+        try:
+            probe_data = load_image(probe_image)
+        except (OSError, ValueError):
+            print("Visual review probe photo unavailable", flush=True)
+            return "", "", ""
         for endpoint in endpoints:
             for model in ("qwen3-vl-plus", "qwen3.7-plus"):
                 try:
                     result = chat(endpoint, key, model, [{"role": "user", "content": [
-                        {"type": "image_url", "image_url": {"url": probe_image}},
+                        {"type": "image_url", "image_url": {"url": probe_data}},
                         {"type": "text", "text": '描述图中场景。只返回JSON对象，description为简短的描述。'},
                     ]}], temperature=0.1, max_tokens=200)
                     if isinstance(result, dict) and result.get("description"):
