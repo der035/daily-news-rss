@@ -128,7 +128,7 @@ def review_image(article, sources, url, key, excluded=(), model="qwen3-vl-flash"
             result = chat(url, key, model, [{"role": "user", "content": [
                 {"type": "image_url", "image_url": {"url": image}},
                 {"type": "text", "text": prompt},
-            ]}], enable_thinking=False, max_tokens=380)
+            ]}], temperature=0.1, max_tokens=380)
             caption = result.get("caption")
             if result.get("match") is True and isinstance(caption, str) and 10 <= len(caption.strip()) <= 100:
                 accepted.append((image, source["publisher"], source["url"], caption.strip()))
@@ -154,19 +154,24 @@ def vision_connection():
     probe_image = "https://p1.img.cntv.cn/photoworkspace/contentimg/2026/11/23/2026112319595746517.jpg"
     if key:
         for endpoint in endpoints:
-            for model in ("qwen3-vl-flash", "qwen3-vl-plus", "qwen3.7-plus"):
+            for model in ("qwen3-vl-plus", "qwen3.7-plus"):
                 try:
                     result = chat(endpoint, key, model, [{"role": "user", "content": [
                         {"type": "image_url", "image_url": {"url": probe_image}},
                         {"type": "text", "text": '描述图中场景。只返回JSON对象，description为简短的描述。'},
-                    ]}], enable_thinking=False, max_tokens=200)
+                    ]}], temperature=0.1, max_tokens=200)
                     if isinstance(result, dict) and result.get("description"):
                         print("Visual review service ready:", model, flush=True)
                         return endpoint, key, model
                 except HTTPError as error:
                     try:
                         detail = json.loads(error.read(4096))
-                        code = detail.get("code") or detail.get("error", {}).get("code")
+                        error_data = detail.get("error") or detail
+                        code = error_data.get("code")
+                        reason = str(error_data.get("message", "")).replace(key, "[redacted]")
+                        if workspace:
+                            reason = reason.replace(workspace, "[workspace]")
+                        print("Visual probe response:", reason[:180], flush=True)
                     except (ValueError, AttributeError):
                         code = None
                     safe_code = code if isinstance(code, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", code) else ""
