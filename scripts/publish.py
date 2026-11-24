@@ -381,7 +381,7 @@ def generate(items):
                 print("Skipped incomplete article:", ids)
                 continue
             context = a["context"].strip()
-            if any(term in context for term in ("现有资料不足", "素材仅", "未说明", "无法判断更深层", "没有足够信息")) or len(context) < 55:
+            if any(term in context for term in ("现有资料不足", "素材仅", "无法判断更深层", "没有足够信息")) or len(context) < 55:
                 print("Skipped low-information background:", ids)
                 continue
             # Entity explanations require a verbatim supporting span from the input source.
@@ -481,9 +481,14 @@ def generate(items):
         direct = [item for item in candidates if item.get("source_role") not in (None, "交叉核实")]
         use_diverse_desks = category == "国内新闻" and len(direct) >= 8 and len({item["publisher"] for item in direct}) >= 2
         rejected = set()
-        for attempt in range(4):
+        for attempt in range(7):
             used = {src["url"] for article in category_output for src in article["sources"]} | rejected
             remaining = [item for item in candidates if item["url"] not in used]
+            remaining_chinanews = 2 - sum(old["publisher"].startswith("中国新闻网") for old in category_output)
+            if use_diverse_desks and remaining_chinanews <= 0:
+                remaining = [item for item in remaining if not item["publisher"].startswith("中国新闻网")]
+            if not remaining:
+                break
             needed = STORIES_PER_CATEGORY - len(category_output)
             if needed <= 0:
                 break
@@ -495,7 +500,7 @@ def generate(items):
                 "\n可选素材：" + json.dumps(remaining, ensure_ascii=False)
             )
             if use_diverse_desks:
-                prompt += "\n有足够原站报道时，中国新闻网最多担任两篇主来源。至少三篇用候选中的官方、财经、民生原站报道做主来源，优先选同事件有配图的优质报道。"
+                prompt += "\n有足够原站报道时，中国新闻网最多担任两篇主来源。本轮可再选用中国新闻网作主来源的篇数：" + str(max(0, remaining_chinanews)) + "。若本轮只需补足空缺，按剩余名额选择。优先选同事件有配图的优质原站报道。"
             data = ask([{"role": "system", "content": instructions},
                         {"role": "user", "content": prompt}])
             new = [article for article in validate(data.get("articles", []))
