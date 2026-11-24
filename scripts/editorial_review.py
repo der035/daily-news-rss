@@ -6,6 +6,7 @@ import re
 import time
 from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 TEXT_URL = "https://api.deepseek.com/chat/completions"
 
@@ -103,7 +104,7 @@ def candidate_images(sources):
                 yield url, source
 
 
-def review_image(article, sources, url, key, excluded=()):
+def review_image(article, sources, url, key, excluded=(), model="qwen3-vl-flash"):
     accepted = []
     if not key or not url:
         return accepted
@@ -124,7 +125,7 @@ def review_image(article, sources, url, key, excluded=()):
             "\n提供图片的文章：" + source["title"]
         )
         try:
-            result = chat(url, key, "qwen3-vl-flash", [{"role": "user", "content": [
+            result = chat(url, key, model, [{"role": "user", "content": [
                 {"type": "image_url", "image_url": {"url": image}},
                 {"type": "text", "text": prompt},
             ]}], enable_thinking=False, max_tokens=380)
@@ -133,7 +134,7 @@ def review_image(article, sources, url, key, excluded=()):
                 accepted.append((image, source["publisher"], source["url"], caption.strip()))
                 break
         except (OSError, ValueError, KeyError, TypeError, IndexError, AttributeError) as error:
-            print("Image review unavailable:", type(error).__name__, flush=True)
+            print("Image review unavailable:", error.code if isinstance(error, HTTPError) else type(error).__name__, flush=True)
     return accepted
 
 
@@ -144,11 +145,41 @@ def audit_story(article, sources, glossary, key, model):
     return review_text(article, sources, terms, key, model)
 
 
-def audit_edition_images(articles, items):
-    image_key = os.environ.get("DASHSCOPE_API_KEY", "").strip()
+def vision_connection():
+    key = os.environ.get("DASHSCOPE_API_KEY", "").strip()
     workspace = os.environ.get("DASHSCOPE_WORKSPACE_ID", "").strip()
-    vision_url = (f"https://{workspace}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions"
-                  if re.fullmatch(r"[a-zA-Z0-9_-]{4,128}", workspace) else "")
+    endpoints = ["https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"]
+    if re.fullmatch(r"[a-zA-Z0-9_-]{4,128}", workspace):
+        endpoints.insert(0, f"https://{workspace}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions")
+    probe_image = "https://p1.img.cntv.cn/photoworkspace/contentimg/2026/11/23/2026112319595746517.jpg"
+    if key:
+        for endpoint in endpoints:
+            for model in ("qwen3-vl-flash", "qwen3-vl-plus", "qwen3.7-plus"):
+                try:
+                    result = chat(endpoint, key, model, [{"role": "user", "content": [
+                        {"type": "image_url", "image_url": {"url": probe_image}},
+                        {"type": "text", "text": '描述图中场景。只返回JSON对象，description为简短的描述。'},
+                    ]}], enable_thinking=False, max_tokens=200)
+                    if isinstance(result, dict) and result.get("description"):
+                        print("Visual review service ready:", model, flush=True)
+                        return endpoint, key, model
+                except HTTPError as error:
+                    try:
+                        detail = json.loads(error.read(4096))
+                        code = detail.get("code") or detail.get("error", {}).get("code")
+                    except (ValueError, AttributeError):
+                        code = None
+                    safe_code = code if isinstance(code, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", code) else ""
+                    print("Visual review service probe:", model, error.code, safe_code, flush=True)
+                    if error.code in (401, 403):
+                        break
+                except (OSError, ValueError, KeyError, TypeError, IndexError):
+                    print("Visual review service probe unavailable:", model, flush=True)
+    return "", "", ""
+
+
+def audit_edition_images(articles, items):
+    vision_url, image_key, vision_model = vision_connection()
     by_url = {item["url"]: item for item in items}
 
     reviewed = [(article, [by_url[source["url"]] for source in article["sources"]]) for article in articles]
@@ -158,7 +189,7 @@ def audit_edition_images(articles, items):
             keys = {image_identity(image) for image, _ in candidate_images(sources)}
             repeated.update(seen_candidates & keys)
             seen_candidates.update(keys)
-        images = list(pool.map(lambda pair: review_image(*pair, vision_url, image_key, repeated), reviewed))
+        images = list(pool.map(lambda pair: review_image(*pair, vision_url, image_key, repeated, vision_model), reviewed))
 
     published, seen_images = [], set()
     for (article, _), approved in zip(reviewed, images):
