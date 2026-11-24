@@ -14,7 +14,7 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 
-from editorial_review import audit_edition
+from editorial_review import UnverifiedStory, audit_edition_images, audit_story
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
@@ -462,6 +462,17 @@ def generate(items):
     # Independent editorial ranking prevents large newsrooms and categories from
     # crowding one another out. Never silently publish fewer than five per tab.
     output = []
+    glossary = reviewed_glossary()
+    by_url = {item["url"]: item for item in items}
+
+    def review_candidate(article):
+        sources = [by_url[source["url"]] for source in article["sources"]]
+        try:
+            return audit_story(article, sources, glossary, key, model)
+        except UnverifiedStory as error:
+            print(str(error), flush=True)
+            return None
+
     for category in CATEGORIES:
         candidates = [item for item in numbered if item["category"] == category][:32]
         if len(candidates) < STORIES_PER_CATEGORY:
@@ -469,8 +480,9 @@ def generate(items):
         category_output = []
         direct = [item for item in candidates if item.get("source_role") not in (None, "交叉核实")]
         use_diverse_desks = category == "国内新闻" and len(direct) >= 8 and len({item["publisher"] for item in direct}) >= 2
-        for attempt in range(3):
-            used = {src["url"] for article in category_output for src in article["sources"]}
+        rejected = set()
+        for attempt in range(4):
+            used = {src["url"] for article in category_output for src in article["sources"]} | rejected
             remaining = [item for item in candidates if item["url"] not in used]
             needed = STORIES_PER_CATEGORY - len(category_output)
             if needed <= 0:
@@ -486,7 +498,14 @@ def generate(items):
                 prompt += "\n有足够原站报道时，中国新闻网最多担任两篇主来源。至少三篇用候选中的官方、财经、民生原站报道做主来源，优先选同事件有配图的优质报道。"
             data = ask([{"role": "system", "content": instructions},
                         {"role": "user", "content": prompt}])
-            new = validate(data.get("articles", []))
+            new = [article for article in validate(data.get("articles", []))
+                   if article["category"] == category and not any(src["url"] in used for src in article["sources"])]
+            with ThreadPoolExecutor(max_workers=5) as pool:
+                reviewed = list(pool.map(review_candidate, new))
+            for original, result in zip(new, reviewed):
+                if result is None:
+                    rejected.update(src["url"] for src in original["sources"])
+            new = [article for article in reviewed if article is not None]
             used_ids = {src["url"] for article in category_output for src in article["sources"]}
             for article in new:
                 if article["category"] != category or any(src["url"] in used_ids for src in article["sources"]):
@@ -1041,7 +1060,7 @@ def main():
     items = collect()
     print("Recent sourced items:", len(items))
     items = enrich(items)
-    articles = audit_edition(generate(items), items, reviewed_glossary())
+    articles = audit_edition_images(generate(items), items)
     if len(articles) != len(CATEGORIES) * STORIES_PER_CATEGORY:
         raise ValueError("Incomplete edition: expected " + str(len(CATEGORIES) * STORIES_PER_CATEGORY) + " stories")
     version = next_version()
