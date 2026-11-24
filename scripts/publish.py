@@ -14,6 +14,8 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 
+from editorial_review import audit_edition
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 CATEGORIES = ("国内新闻", "国际政治", "娱乐文化", "消费科技", "Apple")
@@ -84,12 +86,23 @@ class ArticleText(HTMLParser):
         self.current = []
         self.paragraphs = []
         self.image = ""
+        self.body_images = []
+        self.figure_depth = 0
+        self.article_depth = 0
         self.published = ""
         self.description = ""
         self.title = ""
     def handle_starttag(self, tag, attrs):
+        attr = dict(attrs)
+        if tag == "article":
+            self.article_depth += 1
+        if tag == "figure":
+            self.figure_depth += 1
+        if tag == "img" and not self.ignore and (self.article_depth or self.figure_depth or self.depth):
+            image = attr.get("data-original") or attr.get("data-src") or attr.get("src")
+            if image and image not in self.body_images and len(self.body_images) < 8:
+                self.body_images.append(image)
         if tag == "meta":
-            attr = dict(attrs)
             name = (attr.get("property") or attr.get("name") or attr.get("itemprop") or "").lower()
             content = attr.get("content", "")
             if name in ("article:published_time", "pubdate", "publishdate", "datepublished", "publish_time", "publish-date", "publication_date"):
@@ -110,6 +123,10 @@ class ArticleText(HTMLParser):
         if self.depth and not self.ignore:
             self.current.append(data)
     def handle_endtag(self, tag):
+        if tag == "figure" and self.figure_depth:
+            self.figure_depth -= 1
+        if tag == "article" and self.article_depth:
+            self.article_depth -= 1
         if tag == "p" and self.depth:
             value = " ".join("".join(self.current).split())
             if len(value) >= 75:
@@ -119,6 +136,15 @@ class ArticleText(HTMLParser):
         if tag in ("script", "style", "nav", "footer", "header", "aside") and self.ignore:
             self.ignore -= 1
 
+def article_images(parser, raw, url):
+    images = list(parser.body_images)
+    host = urllib.parse.urlsplit(url).hostname or ""
+    if host == "tv.cctv.com":
+        shots = re.findall(r"""\bcommentimg[12]\s*=\s*["']([^"']+)["']""", raw)
+        images = shots + images
+    return list(dict.fromkeys(resolved for image in images if (resolved := safe_image(image, url))))
+
+
 def enrich(items):
     """Fetch article pages for additional factual context; never claim full text if blocked."""
     for item in items:
@@ -127,7 +153,9 @@ def enrich(items):
         try:
             raw = fetch(item["url"])
             parser = ArticleText()
-            parser.feed(raw.decode("utf-8", errors="replace"))
+            page = raw.decode("utf-8", errors="replace")
+            parser.feed(page)
+            item["body_images"] = article_images(parser, page, item["url"])
             body = "\n".join(parser.paragraphs)
             item["article_excerpt"] = body[:5000] if len(body) >= 350 else ""
             item["image"] = safe_image(parser.image, item["url"]) or item.get("image", "")
@@ -189,6 +217,7 @@ def desk_article(publisher, tier, url, now):
     return dict(category="国内新闻", publisher=publisher, source_role=tier,
                 title=title[:160], url=url, image=safe_image(parser.image,url) if not re.search(r"logo|favicon|default[-_]?image", parser.image, re.I) else "",
                 description=description[:600], article_excerpt=body[:5000],
+                body_images=article_images(parser, raw, url),
                 published=stamp.isoformat())
 
 
@@ -479,10 +508,7 @@ def generate(items):
         output.extend(category_output)
     return output
 
-def render(articles, version):
-    now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
-    date = now.strftime("%Y.%m.%d")
-    esc = lambda x: html.escape(str(x), quote=True)
+def reviewed_glossary():
     # Curated glossary: only annotate terms with reviewed, reusable definitions.
     glossary = {
         "十五五": "中国第十五个五年规划对应2026年至2030年。五年规划用来确定今后五年的发展目标和重点任务，具体项目、预算和实施办法还要看后续政策。",
@@ -559,8 +585,15 @@ def render(articles, version):
     # Common names are intentionally not annotated; prioritize unfamiliar entities.
     for familiar in ("特朗普", "拜登", "习近平", "普京", "泽连斯基", "马斯克", "美国", "俄罗斯", "中国", "欧盟", "联合国", "谷歌", "微软", "苹果公司"):
         glossary.pop(familiar, None)
-    terms = sorted(glossary, key=len, reverse=True)
-    term_pattern = re.compile("|".join(re.escape(t) for t in terms))
+    for common in ("人工智能", "开源", "版权", "票房"):
+        glossary.pop(common, None)
+    return glossary
+
+
+def render(articles, version):
+    now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
+    date = now.strftime("%Y.%m.%d")
+    esc = lambda x: html.escape(str(x), quote=True)
     number_pattern = re.compile(r"\d+(?:[.,]\d+)?(?:%|％|年|月|日|人|亿|万|席|票|美元|元)?")
     # Conservative semantic cues: emphasize a short outcome, never infer causality.
     outcome_pattern = re.compile(
@@ -581,12 +614,10 @@ def render(articles, version):
             for j in range(start, end):
                 occupied[j] = True
 
-        # Rare, source-supported entities take priority over the static glossary.
-        definitions = {**(article_entities or {}), **glossary}
-        for common in ("人工智能", "开源", "版权", "票房"):
-            definitions.pop(common, None)
-        pattern = re.compile("|".join(re.escape(t) for t in sorted(definitions, key=len, reverse=True)))
-        for match in pattern.finditer(value):
+        definitions = article_entities or {}
+        terms = sorted(definitions, key=len, reverse=True)
+        matches = re.finditer("|".join(map(re.escape, terms)), value) if terms else ()
+        for match in matches:
             term = match.group()
             if seen_terms is not None and term in seen_terms:
                 continue
@@ -632,7 +663,14 @@ def render(articles, version):
         article_entities = {e["name"]: e["definition"] for e in a.get("entities", [])}
         seen_terms = set()
         image = safe_image(a.get("image", ""))
-        photo = ('<figure><img src="' + esc(image) + '" alt="' + esc(headline) + '" loading="lazy" onerror="this.parentElement.hidden=true"><figcaption>图片来源：' + esc(a.get("image_publisher", a["publisher"])) + '</figcaption></figure>') if image else ""
+        photo = ""
+        if image:
+            credit = esc(a.get("image_publisher", a["publisher"]))
+            source = esc(a.get("image_source_url", a["source_url"]))
+            alt = esc(a.get("image_caption", headline))
+            photo = (f'<figure><img src="{esc(image)}" alt="{alt}" loading="lazy" '
+                     f'onerror="this.parentElement.hidden=true"><figcaption>图片来源：'
+                     f'<a href="{source}" target="_blank" rel="noopener noreferrer">{credit}</a></figcaption></figure>')
         sources = a.get("sources") or [{"url": a["source_url"], "publisher": a["publisher"]}]
         source_links = ' · '.join(
             '<a href="' + esc(x["url"]) + '" target="_blank" rel="noopener noreferrer">' +
@@ -804,6 +842,7 @@ button,a,[role="tab"]{touch-action:manipulation}
     style += """.audio-entry{display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:10px 12px;border:2px solid var(--ink);color:var(--ink)!important;text-decoration:none;font-size:12px;font-weight:900;white-space:nowrap}.audio-entry:hover,.audio-entry:focus-visible{background:var(--ink);color:var(--paper)!important}@media(max-width:700px){.audio-entry{padding:7px 8px;font-size:11px}}"""
     style += """.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.header-actions .audio-entry{font-size:12px;padding:7px 9px;min-height:34px}@media(max-width:700px){.header-actions{gap:7px}.header-actions .audio-entry{font-size:11px;padding:6px 8px}}"""
     style += """.home-podcast{border:3px solid var(--ink,#111);padding:18px;margin:18px 0 22px;background:var(--paper,#f5f3ed)}.home-podcast[hidden]{display:none!important}.home-podcast-heading{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}.home-podcast-heading span{color:var(--muted,#555)}.home-podcast audio{display:block}.audio-entry{cursor:pointer;background:var(--paper,#f5f3ed);font-family:inherit}.audio-entry[aria-expanded=true]{background:var(--blue,#0639f5);color:#fff!important}"""
+    style += """.story .standard-block{margin:20px 0 24px;padding:0;background:none;border:0}.story .standard-block h3{margin:0 0 8px;font-size:13px;line-height:1.4;letter-spacing:.095em;color:var(--blue);font-weight:850}.story .standard-block p{margin:0;color:var(--ink);line-height:1.9}.story .deep-block{margin:22px 0 18px;padding:16px 18px;border:0;border-top:2px solid var(--blue);background:#edf0fa}.story .deep-block h3{margin:0 0 7px;font-size:16px;line-height:1.5;color:var(--ink)}.story .deep-block p{margin:0;line-height:1.85}.story .deep-block .source-note{margin-top:9px;color:var(--muted)}.theme-dark .story .deep-block{background:#202a41}@media(max-width:600px){.story .deep-block{padding:14px 14px}.story .standard-block{margin-top:16px}}"""
     style += """.standard-block{margin:16px 0;padding:14px 18px;border:1px solid var(--muted);border-left:4px solid var(--blue);background:color-mix(in srgb,var(--soft) 60%,var(--paper));}.standard-block h3{margin:0 0 7px}.standard-block p{margin:0}.story .source-mark{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}.source-mark .story-play{flex:none;min-height:44px;margin:0;padding:6px 14px;white-space:nowrap}.feedback-frame{width:100%;height:min(70dvh,620px);border:0}"""
     style += """.story-heading{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-bottom:16px}.story-heading h2{flex:none;width:100%;min-width:0;margin:0;overflow-wrap:break-word}.story-heading .story-play{align-self:flex-end;flex-shrink:0;font-size:12px;padding:7px 10px;white-space:nowrap;margin:0}@media(max-width:600px){.story-heading{gap:8px}.story-heading .story-play{font-size:11px;padding:6px 8px}}.story-audio{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0}.story-play{border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-weight:850;padding:11px 16px;cursor:pointer}.story-play:disabled{opacity:.5;cursor:not-allowed}.story-play[aria-pressed=true]{background:var(--blue);color:#fff}.story-audio-note{font-size:12px;color:var(--muted)}"""
     script = r"""(function(){
@@ -1001,7 +1040,8 @@ def next_version():
 def main():
     items = collect()
     print("Recent sourced items:", len(items))
-    articles = generate(enrich(items))
+    items = enrich(items)
+    articles = audit_edition(generate(items), items, reviewed_glossary())
     if len(articles) != len(CATEGORIES) * STORIES_PER_CATEGORY:
         raise ValueError("Incomplete edition: expected " + str(len(CATEGORIES) * STORIES_PER_CATEGORY) + " stories")
     version = next_version()
