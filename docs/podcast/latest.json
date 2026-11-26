@@ -1,213 +1,213 @@
 {
-  "date": "2026-11-26",
-  "edition_id": "0f86f7f74b74430e",
+  "date": "2026-11-27",
+  "edition_id": "d98db17dfbe08e1b",
   "status": "audio_ready",
   "narration_style": "podcast",
-  "title": "THE DAILY NOISE · 2026-11-26",
+  "title": "THE DAILY NOISE · 2026-11-27",
   "segments": [
     {
       "type": "opening",
-      "text": "欢迎收听每日噪音。现在是11月26日的新闻时间。接下来，聊聊今天值得关注的几件事。"
+      "text": "欢迎收听每日噪音。现在是11月27日的新闻时间。接下来，聊聊今天值得关注的几件事。"
     },
     {
       "type": "story",
       "article_index": 0,
       "category": "国内新闻",
-      "title": "中国部署2030年建成新一代通信网",
+      "title": "高交会开幕：创新引领变革，合作链接全球",
       "source_url": "https://www.news.cn/fortune/20261126/db6f0d4f9cf84060a39c9a85709b5e64/c.html",
-      "text": "咱们国家要建一个未来十年的通信大网，目标是2030年完成。这可不是普通的网络升级，而是要把5G的增强版、6G的前沿技术、万兆光纤，还有卫星互联网全都连起来，形成一个覆盖天上、地下、海上的一体化通信系统。听起来像科幻？但这是工信部、网信办、发改委联合发的文件，属于国家级顶层设计。简单说，就是想在数字技术竞争里抢到先机。这个新网络不只是快，还要智能、安全、低碳，能支撑工业制造、智慧城市这些未来场景。尤其关键的是，中国现在正式进入6G的系统布局阶段，不再只是单点突破，而是从基础网络到空间网络，全面铺开。这意味着接下来十年，中国的科技竞争底牌，很大程度上就押在这张网上了。"
+      "text": "深圳的高交会又开幕了，这次不光是热闹，更关键的是——它正在成为全球科技合作的新枢纽。今年展会面积40万平方米，5000多家机构、120多个国家和地区参与，主打人工智能、高端制造、绿色低碳这些前沿领域。听起来像是一场科技秀，但背后其实是中国持续开放的信号。高交会本来就是中国科技第一展，过去几十年一直推动技术成果落地，现在更强调国际合作。比如各地政府和企业都在谈产业链协同，还有制度型开放这种深层议题。说白了，不只是卖产品，更是要一起建生态。对普通老百姓来说，这意味着未来可能有更多国产高科技走进生活，同时也能看到全球创新如何在中国落地生根。这不仅是展览，更是一次全球科技版图的重新布局。"
     },
     {
       "type": "story",
       "article_index": 1,
       "category": "国内新闻",
-      "title": "国家出台“一老一小”服务体系建设方案",
-      "source_url": "https://www.chinanews.com.cn/sh/2026/11-26/10737951.shtml",
-      "text": "你家老人怎么养老？孩子谁来带？国家这次真动真格了。发改委、民政部、卫健委、教育部一起出方案，目标是到2030年，把2000个老旧公办养老机构全改造一遍，同时在社区里建起‘一刻钟’托育圈——也就是走个十分钟，就能找到靠谱的托儿服务。更特别的是，还鼓励老幼共托，让爷爷奶奶和孙子孙女在一个地方照护，既方便又有人情味。这背后是应对人口老龄化和生育率下降的现实压力。以前是头疼医头，现在是系统性解决。配套的资金、土地、人才政策都跟上了，关键是量化指标可考核，不是画饼。说白了，就是要让‘老有所养、幼有所育’不再是口号，而是真能落地的生活保障。"
+      "title": "四大行签超6000亿回购增持贷款合同",
+      "source_url": "https://www.chinanews.com.cn/cj/2026/11-26/10738467.shtml",
+      "text": "四大银行一口气签了超过6000亿的贷款合同，专门用来支持上市公司回购或增持自家股票。这事儿听着有点专业，但其实关系到每个股民的心情。简单说，央行给银行提供低成本资金，银行再按市场化原则借给符合条件的公司，让他们买自己公司的股票。目的很明确：稳信心、稳市场。现在资本市场波动大，这种操作相当于给市场打了一针强心剂。尤其在经济转型期，企业需要稳定股价来维持融资能力。这波操作不是救市，而是通过制度化手段让市场自我修复。对普通人来说，意味着政策工具越来越精准，也说明国家在用真金白银维护金融稳定，而不是空喊口号。"
     },
     {
       "type": "story",
       "article_index": 2,
       "category": "国内新闻",
-      "title": "习近平对党内法规工作作出重要指示",
-      "source_url": "https://tv.cctv.com/2026/11/25/VIDEr4AxdVm5O1yNEumZwu9I261125.shtml",
-      "text": "最近习近平对党内法规工作说了重要话，强调要靠制度管党治党。这话听着严肃，其实核心是：党要自我约束，不能靠人治，得靠制度。这次指示是在全国党内法规工作会议前发布的，说明中央非常重视。会议由蔡奇出席，要求完善党的领导制度体系，让党内法规和国家法律能衔接好，执行到位。简单说，就是让党的规矩更清晰、更有力，避免权力滥用。这不仅是反腐的需要，更是确保党始终成为中国特色社会主义事业坚强领导核心的关键一环。制度治党，不是喊口号，而是要真正把权力关进笼子里。"
+      "title": "6G试点启动，布局未来通信底层能力",
+      "source_url": "https://www.news.cn/tech/20261126/4894302d59d64cf6b7cba87b20186aa0/c.html",
+      "text": "6G试点正式启动了，而且是全国联动。工信部联合八个省市，开始在核心芯片、新型终端、操作系统、卫星互联网这些环节搞试验，目标直指工业制造、具身智能、智慧海洋这些未来场景。听起来很远？其实6G离我们没那么遥远。虽然商用预计要到2030年左右，但现在布局，就是在抢技术制高点。6G不只是更快的网速，它要实现人、机、物、环境的深度融合，甚至能支持毫米级定位和实时远程操控。这次试点，就是要提前搭建技术生态，避免未来被卡脖子。对中国来说，这是提升全球标准话语权的重要一步。换句话说，别等别人定规则了才反应，我们要从源头就参与制定。这不仅关乎通信，更是数字社会的底层基建。"
     },
     {
       "type": "story",
       "article_index": 3,
       "category": "国内新闻",
-      "title": "中国启动6G创新发展部省协同试点",
-      "source_url": "https://www.chinanews.com.cn/cj/2026/11-26/10738003.shtml",
-      "text": "中国已经开始6G的实战预演了。工信部联合八个省市启动试点，不搞虚的，直接在核心器件、新型终端、操作系统、卫星互联网这些关键环节上动手。目标是验证未来十年可能用上的场景，比如工业制造里的智能控制、具身机器人通信、沉浸式虚拟交互。虽然现在还没商用，但这是提前布局。重点是‘通感算智一体化’——就是通信、感知、计算、智能融合，让网络不仅能传数据，还能感知环境、做出判断。这种‘适度超前’的思路，是为了抢占国际标准制定的主动权。谁先定规则，谁就掌握话语权。这步棋，下得深，也走得远。"
+      "title": "中国空间站向全球开放科研机会",
+      "source_url": "https://tv.cctv.com/2026/11/26/VIDEbPrIkvX98jnu5RZOzvsg261126.shtml",
+      "text": "中国空间站现在真的向全世界开放了。巴基斯坦航天员穆罕默德·齐尚·阿里，已经和中国航天员一起执行任务，还负责中巴合作的科学实验。这不是宣传口号，而是实实在在的合作。目前中国已和50多个国家、国际组织签署了200多份航天合作协议，风云气象卫星、北斗系统、中巴资源卫星，都服务着141个国家和地区。你手机里的导航、台风预警、农业估产，很可能就有中国卫星的功劳。空间站不再只是中国的，而成了全球科学家的共享平台。这背后体现的是中国对“外层空间是人类共同疆域”的承诺。不是谁家的领地，而是大家都能用的公共设施。这种开放姿态，既展示了技术实力，也传递了和平利用太空的诚意。"
     },
     {
       "type": "story",
       "article_index": 4,
       "category": "国内新闻",
-      "title": "广东男童疑被生父女友伤害致死案一审开庭",
-      "source_url": "https://www.thepaper.cn/newsDetail_forward_34562804",
-      "text": "广东一个1岁半男童被生父女友虐待致死的案子一审开庭了，让人揪心。检方指控这名女子长期掐捏、拍打、踢打孩子，最终导致死亡。最引发争议的是，孩子的亲生父亲竟然出具了刑事谅解书，想让对方轻判。但母亲坚决反对，认为这是对孩子的二次伤害，要求严惩，并追究父亲监护失职的责任。庭审前，父亲的父亲说同意撤销谅解，但具体怎么选，还不清楚。这案子牵出多个社会痛点：家庭暴力怎么认定？谅解书能不能影响量刑？尤其是涉及未成年人的恶性案件，是不是应该从严？专家提醒，这类案件必须严格把握‘谅解从宽’的尺度，监护人如果失职，也得追责。这不仅是司法问题，更是对儿童权益保护的考验。"
+      "title": "美拟对华加征关税最高至40% 中方回应将维护权益",
+      "source_url": "https://www.zaobao.com.sg/news/china/story20261126-10064339",
+      "text": "美国那边又在酝酿对华加征关税，最高可能到40%。这消息一出，很多人心里咯噔一下。不过别急，事情还没定。特朗普政府以“制造业产能过剩”为由，提出对14个经济体加税，中国一般商品最高20%，部分电子产品10%，还有些豁免。关键是，如果中美贸易休战协议不能在2027年1月10日前延长，税率可能飙升。目前还在征求意见阶段，公众可以提交意见，听证会定在1月25日。中方态度很明确：反对单边主义，坚决维护权益。有意思的是，分析认为双方其实都想维持协议，高层可能在迈阿密G20峰会碰面谈。真正敏感的，可能是科技出口管制，特别是光刻机这类关键设备。一旦触及红线，反制可能升级，比如限制稀土出口。所以这场博弈，表面是关税，实则是科技与供应链的角力。"
     },
     {
       "type": "story",
       "article_index": 5,
       "category": "国际政治",
-      "title": "朝鲜领导人称应扩大战术核武器部署",
-      "source_url": "https://www.aljazeera.com/news/2026/11/26/kim-jong-un-says-north-korea-should-widen-deployment-of-tactical-nukes?traffic_source=rss",
-      "text": "朝鲜领导人金正恩最近在视察核设施时放出狠话，说要扩大战术核武器的部署，还强调这玩意儿是‘绝对不可侵犯’的。他警告，谁要是敢否认朝鲜有核能力，那就是公开宣战。这话一出，立马让人想到最近朝韩边境的地雷事件——双方刚吵完架，气氛本就紧张，现在又来这么一出，半岛局势更悬了。其实这不只是喊口号，背后是朝鲜核战略的转变：从过去拼命造核弹头，转向把核武器用得更灵活、更贴近实战。他们现在估计有80到120枚核弹头，而且这事儿已经写进宪法了，意味着核武装成了国家根本政策。韩国也一直盯着，生怕哪天真打起来。所以这次表态，与其说是威胁，不如说是朝鲜在告诉全世界：我现在的底牌，不止是数量，还有怎么用。"
+      "title": "伊朗无人机袭击致两名意大利技术人员死亡",
+      "source_url": "https://www.bbc.co.uk/news/articles/c39w9y5dx4k5o?at_medium=RSS&at_campaign=rss",
+      "text": "两名意大利技术员在科威特遇袭身亡，背后是一场正在升级的中东对抗。事情发生在科威特一处防空监测设施，一架伊朗无人机袭击了这里，造成两人死亡、四人受伤。死者是德国莱茵金属公司的雇员，当时正在执行设备维护任务。伤者中包括一名科威特人和一名巴基斯坦人。科威特和意大利都指认伊朗是幕后黑手，但伊朗军方否认发动任何军事行动。值得注意的是，袭击发生时，科威特军方正与意大利代表团开会，其中包括意大利宪兵总司令和驻科威特大使。这起事件不是孤立的——自去年2月美以对伊朗采取军事行动后，伊朗和美国及其盟友之间的紧张关系持续升温。科威特作为美军在中东的重要基地，近期多次遭无人机攻击。伊朗方面也多次表态，说不想再维持‘无战无和’的状态，正在考虑采取更激进的手段。欧盟立刻谴责这次袭击，强调海湾地区的安全直接关系到欧洲。意大利总理梅洛尼也向遇难者家属致哀。"
     },
     {
       "type": "story",
       "article_index": 6,
       "category": "国际政治",
-      "title": "乌克兰称袭击俄罗斯萨瓦塞利卡空军基地，击损五架飞机",
-      "source_url": "https://www.aljazeera.com/news/2026/11/26/ukraine-attacks-russian-military-base-says-five-planes-struck?traffic_source=rss",
-      "text": "乌克兰突然对俄罗斯本土发动了一次远程打击，炸了莫斯科以东一个空军基地，五架飞机受损，包括三架能发射高超音速导弹的米格-31和两架苏-34战斗轰炸机。这是乌军近期一系列深入打击的一部分，目标很明确：削弱俄方空中力量和远程打击能力。之前他们已经炸过克里米亚大桥，还在芬兰湾和利比亚水域动过手。俄罗斯到现在还没回应，但乌方态度很硬：只要俄方不停止攻击乌克兰能源设施，这种袭击就不会停。更关键的是，这些无人机袭击已经让俄罗斯炼油厂的加工量比10月下旬下降了45%。换句话说，这场战争不只打在前线，也在后方掐脖子。乌克兰这是在用非对称手段，逼俄罗斯付出代价。"
+      "title": "伊拉克库尔德地区爆发大规模抗议",
+      "source_url": "https://www.dw.com/en/protests-in-iraqi-kurdistan-at-plans-for-government-in-baghdad-to-take-over-oil-border-crossings/a-80065994?maca=en-rss-en-all-1573-rdf",
+      "text": "伊拉克库尔德地区爆发大规模抗议，原因是一场关于权力的拉锯战。巴格达中央政府宣布要接管库尔德地区的油管运营和边境口岸管理权，结果引发数千名民众在埃尔比勒街头集会，高喊反对“重新集权”。库尔德地区政府明确表示，这个决定“完全不可接受”。表面上看，巴格达的理由是打击石油走私，但库尔德人认为这是在侵犯他们宪法赋予的自治权。多年来，双方在石油收入分配、领土控制和政治主导权上矛盾不断。现在这一举措一出，等于在旧伤上再撒盐。一旦冲突升级，可能动摇整个伊拉克的稳定。毕竟，库尔德地区拥有自己的军队和行政体系，如果中央政府强行推进，很可能会引发更大规模的对抗。这不是简单的行政调整，而是一场关乎国家结构的深层博弈。"
     },
     {
       "type": "story",
       "article_index": 7,
       "category": "国际政治",
-      "title": "美国风暴致纽约感恩节游行史上首次推迟",
-      "source_url": "https://www.france24.com/en/americas/20261126-powerful-us-storm-forces-historic-postponement-of-thanksgiving-day-parade-in-new-york",
-      "text": "纽约感恩节游行，今年第一次推迟了。因为一场强风暴来袭，原定周四举行的活动被取消，改到周六。这可是自1924年创办以来头一回，因为天气原因延期。主办方和市政府都说了，安全第一，尤其是那些巨型气球，在强风里万一失控，可能砸到人。NBC会重播去年的游行，有些表演者也调整了时间。这件事看似只是节日取消，其实背后是气候变化带来的现实压力——极端天气越来越频繁，大城市办大型公共活动，必须考虑更多风险。以前没遇到过这种事，现在得重新想应对机制了。这不是小事，而是提醒我们，未来很多传统活动，可能都要跟着气候走。"
+      "title": "卡塔尔、埃及领导人讨论加沙停火与地区安全",
+      "source_url": "https://www.aljazeera.com/news/2026/11/26/qatari-egyptian-leaders-discuss-gaza-ceasefire-and-regional-security?traffic_source=rss",
+      "text": "卡塔尔和埃及领导人最近在开罗会面，谈的都是加沙局势。两人重点讨论了停火协议的执行进展、人道援助如何顺利送达，还有地区安全合作的问题。他们强调，必须通过对话来化解紧张，避免局势进一步恶化。这次高层会晤意义不小——在美欧斡旋陷入僵局的背景下，埃及和卡塔尔作为阿拉伯世界里最活跃的调解力量，正联手推动政治解决。卡塔尔长期与哈马斯保持联系，埃及则在开罗有重要影响力，两国合作让外界看到一条新的外交路径。尤其在以色列和哈马斯之间互不信任的情况下，这种协调显得尤为关键。虽然目前还没有达成新协议，但至少说明，阿拉伯国家没有放弃和平努力。这轮对话，可能是打破当前困局的一次重要尝试。"
     },
     {
       "type": "story",
       "article_index": 8,
       "category": "国际政治",
-      "title": "开罗环城公路燃料卡车翻覆起火致至少31人死亡",
-      "source_url": "https://www.france24.com/en/africa/20261126-at-least-31-killed-in-cairo-fire-after-fuel-truck-overturns-on-busy-highway",
-      "text": "埃及开罗环城公路发生一起严重车祸，一辆燃料卡车翻车起火，烧死了至少31人，还有十几人受伤，现场多辆汽车和摩托车都被烧毁。事故发生在大开罗地区的吉萨省，属于交通最繁忙的主干道之一。埃及官方迅速确认了伤亡情况，总理下令彻查，总统也发了哀悼声明。这起事故再次暴露了埃及严重的交通安全问题。数据显示，这个国家每年交通事故致死人数超过5000，去年甚至接近6000人。而这次事故，很可能就是车辆维护差、执法不严、道路老化这些老问题叠加的结果。一条普通的环城路，居然能酿成这么大的悲剧，说明系统性漏洞不是个别事件，而是长期积累的隐患。老百姓出门，真得靠运气。"
+      "title": "德国总统施泰因迈尔在非洲最后一趟访问中呼吁德企加大投资并承担风险",
+      "source_url": "https://www.dw.com/en/on-his-last-africa-trip-steinmeier-urges-german-firms-to-invest-and-take-risks-as-china-pushes-ahead/a-80067717?maca=en-rss-en-all-1573-rdf",
+      "text": "德国总统施泰因迈尔在非洲的最后一站，把话题聚焦在企业投资上。他在加纳的德非商业峰会上呼吁德国企业大胆进入非洲市场，别怕风险。他说，自从2015年首届峰会以来，德国企业的参与度一直没跟上。反观中国、土耳其和海湾国家，已经在基建、能源等领域快速布局。施泰因迈尔特别提到，非洲大陆自由贸易区（AfCFTA）是个大机会，德国不能错过。他参观了科特迪瓦的一所职业学校，还和肯尼亚总统鲁托讨论了移民与技能合作。目前已经有近万名肯尼亚人在德国工作，超过一千人正在接受德国的职业培训。德国政府的思路是：企业落地，就能带动本地就业和技能培训，帮助应对非洲青年劳动力激增的挑战。这不只是经济合作，更是一种长远的战略布局。"
     },
     {
       "type": "story",
       "article_index": 9,
       "category": "国际政治",
-      "title": "美军在爱荷华州成功引爆数吨有毒炸药",
-      "source_url": "https://www.bbc.co.uk/news/articles/cwg7l5ve251ko?at_medium=RSS&at_campaign=rss",
-      "text": "美国陆军在爱荷华州成功引爆了大约五吨不稳定的炸药，整个过程控制得很稳，没造成空气中的铅污染，官方说是‘巨大成功’。可这事一开始可没那么顺利——当地居民听说要炸这么多毒药，吓得不行，担心影响健康，直接抗议。虽然事后检测显示没有铅暴露，但公众的疑虑没那么容易消。这事儿暴露出一个问题：政府搞高危项目，能不能提前跟社区说清楚？透明度不够，再安全的行动也可能被当成威胁。销毁危险品本来是好事，但沟通不到位，反而让信任受损。这不只是技术问题，更是信任问题。以后类似行动，光做对还不够，得让大家知道你在做什么，为什么做，才能真正安心。"
+      "title": "柴油油轮在伊比萨附近倾覆致1人死亡，环境风险待评估",
+      "source_url": "https://www.bbc.co.uk/news/articles/c9gklryvj24do?at_medium=RSS&at_campaign=rss",
+      "text": "一艘载着七千吨柴油的马耳他籍油轮在伊比萨岛附近翻沉，造成一人死亡，其余16人获救。事故地点位于地中海一个生态敏感区，现在最让人担心的是环境影响。这艘船部分沉没，还没完全下沉，给救援创造了条件。西班牙海事部门已派出污染控制船评估泄漏风险。问题在于，伊比萨岛早在1999年就被列入联合国教科文组织世界遗产名录，它的波西多尼亚海草床是地中海生物多样性的关键。这种海草能固碳、护岸，也是许多鱼类的栖息地。历史上，2002年就发生过类似事故，‘普雷斯坦号’油轮泄漏导致严重污染，教训深刻。如今再次面临类似威胁，公众和环保组织高度警惕。海上运输的安全，和生态保护之间的矛盾，又一次被推到台前。这次事故虽未造成大规模泄漏，但警钟已经敲响。"
     },
     {
       "type": "story",
       "article_index": 10,
       "category": "娱乐文化",
-      "title": "微短剧全球收入达200亿美元，但海外盈利仍薄弱",
-      "source_url": "https://variety.com/2026/tv/news/microdrama-revenue-20-billion-2026-profits-thin-1236958647/",
-      "text": "你可能没想到，全球微短剧今年收入要冲到200亿美金，但真正赚钱的，还是中国。这200亿里头，中国一家就贡献了152亿，占七成六。可问题来了，海外市场的收入虽然有48.7亿，但赚得并不轻松。每一块钱收入里，有56分拿去打广告，18分要交给平台抽成，真正落到企业口袋的，少得可怜。像美国虽然最有钱，但收入还降了；印度倒是涨得飞快，年增超两百%，靠的是低价订阅和本地用户基础。现在海外头部四家平台，全是中国资本控股的，但即便如此，像DramaBox净利率才3.2%，ReelShort去年还亏了1200万，今年一季度才刚转正。说白了，需求是有了，但商业模式还没跑通。MPA报告说得明白：海外微短剧还是个新生意，还没证明能持续赚钱。"
+      "title": "《饥饿游戏：破晓》感恩节前夜票房1500万美元，五日预估8500万美元",
+      "source_url": "https://variety.com/2026/film/box-office/sunrise-on-the-reaping-box-office-hunger-games-thanksgiving-eve-focker-in-law-1236958999/",
+      "text": "感恩节前夜，一部电影票房冲上1500万美元，三天累计就接近8500万，这可不是什么小成本片，而是《饥饿游戏：破晓》——系列第六部，也是第一部前传。它讲的是主角凯特尼斯参赛24年前的施惠国故事，由弗朗西斯·劳伦斯执导，改编自苏珊·柯林斯的同名小说。这成绩让它的北美总票房直接干到2.33亿，表现相当稳。但同期上映的两部新片就没这么幸运了。迪士尼的动画《Hexed》首日才收760万，环球的喜剧《Focker In-Law》开画530万，两部都远低于预期的4000万起步目标。虽然评分不算差，一个A−一个B+，但观众热情没起来，可能是因为档期太挤，也可能是题材不够吸引人。说白了，这个感恩节，大家还是更愿意为情怀买单，而不是新面孔。"
     },
     {
       "type": "story",
       "article_index": 11,
       "category": "娱乐文化",
-      "title": "FTX前高管怒批Netflix剧集《慈善家》种族刻板印象",
-      "source_url": "https://variety.com/2026/tv/news/ftx-constance-wang-slams-altruists-portrayal-racist-netflix-1236958694/",
-      "text": "Netflix最近出了一部关于FTX崩盘的剧，叫《慈善家》，结果前高管康斯坦斯·王直接开炮，说这剧太刻板、太种族主义了。她本人是亚裔，剧中角色却用假中文口音，还被塑造成冷酷理性、不近人情的形象，这明显是在强化对亚裔的偏见。更让她不满的是，剧情严重歪曲事实，把复杂的金融犯罪简化成一段浪漫关系，完全忽略了真实事件的复杂性。她自己也没被征询意见，就被人这么拍。这事一出，立刻引发热议——影视创作到底该多大程度还原真实？代表性和文化敏感度又该怎么平衡？尤其在涉及重大社会事件时，演员、编剧、制作方的责任，真不是一句‘艺术加工’就能带过的。"
+      "title": "英国著名美术设计师马克·蒂尔德斯利去世，享年63岁",
+      "source_url": "https://variety.com/2026/film/global/mark-tildesley-dead-no-time-to-die-production-designer-1236958968/",
+      "text": "英国一位顶尖美术设计师突然离世，享年63岁，名字叫马克·蒂尔德斯利。他不是什么无名之辈，而是参与过《007：无暇赴死》《28天后》《帝国的光明》这些大片的幕后功臣。他跟丹尼·博伊尔、山姆·门德斯合作多年，尤其在2012年伦敦奥运会开幕式上的视觉设计，拿过艾美奖，影响了一整个时代的电影美学。他的风格独特，讲究氛围和细节，很多场景一看就是他的手笔。现在他走了，业界一片哀悼。有人说，这不只是失去一位艺术家，更是告别一个用画面讲故事的时代。他的作品不会消失，但那种对视觉语言的极致追求，恐怕很难再复制了。"
     },
     {
       "type": "story",
       "article_index": 12,
       "category": "娱乐文化",
-      "title": "纽约市长扎赫兰·曼达尼宣布梅西感恩节大游行因风暴推迟至周六",
-      "source_url": "https://deadline.com/2026/11/mayor-zohran-mamdani-macys-thanksgiving-day-parade-postponed-1237233704/",
-      "text": "纽约的梅西感恩节大游行，第一次因为天气推迟了。市长扎赫兰·曼达尼宣布，原定周四的游行改到周六早上八点半举行。原因很简单，强风暴来袭，预报说那天会有两英寸雨，还有超过25英里每小时的大风，气球根本不能飞。这是自1924年创办以来头一回推迟，哪怕1971年也只停了气球，游行照常办。今年特别讲究，正好赶上NBC成立一百年，所以安排了100个经典气球亮相。为了不影响广告，电视台周四会重播去年的版本。不过，市长自己因为跟腱撕裂要动手术，得缺席。有些参演团体，比如阿拉巴马大学的行进乐队，可能因行程冲突退出，目前还在协调，尽量保住原阵容。"
+      "title": "Record Store Day黑五预售预告：诺亚·卡汉新专辑最受期待",
+      "source_url": "https://variety.com/2026/music/news/record-store-day-black-friday-founder-interview-releases-1236958941/",
+      "text": "黑五还没到，唱片圈已经热起来了。Record Store Day今年的黑五预售预告一出，最抢手的居然是诺亚·卡汉的新专辑，尤其是那张《饥饿游戏》原声的7英寸单曲，限量发售，粉丝们已经开始蹲守。这次活动不光是卖唱片，更是一场文化仪式——20多位资深唱片店主组成的‘秘密松鼠小组’会从上百款里挑出最值得收藏的。近年来，年轻人越来越爱买实体唱片，像泰勒·斯威夫特、比莉·艾利什的专辑销量都在回升。所以黑五成了年度最大型的实体音乐消费事件之一。说到底，这不是一次购物，而是一次对音乐本真的回归。你买的不只是声音，还有那份独一无二的触感和纪念意义。"
     },
     {
       "type": "story",
       "article_index": 13,
       "category": "娱乐文化",
-      "title": "Indian Filmmaker C.V. Rao Becomes First South Indian SMPTE Fellow",
-      "source_url": "https://variety.com/2026/film/news/baahubali-rrr-tech-chief-weaning-india-off-overseas-facilities-1236958697/",
-      "text": "印度电影技术圈今天有个历史性突破——来自海得拉巴的安纳普尔纳工作室首席技术官C.V. Rao，成了首位获得美国电影电视工程师协会（SMPTE）院士称号的南印度籍技术专家。这个荣誉可不是随便给的，它代表的是在全球电影工业中顶尖的技术能力。Rao参与过《巴霍巴利王》和《RRR》这类大片的技术制作，推动了印度本土在视觉特效、调色和数据处理方面的能力建设。过去几十年，印度大片后期制作基本依赖欧美公司，现在他带头打破这种依赖，让国内也能完成高难度工序。这不仅是个人荣誉，更是整个印度电影工业走向自主、迈向全球舞台的重要一步。"
+      "title": "BBC遭调查：政府顾问启动反犹主义专项调查",
+      "source_url": "https://www.hollywoodreporter.com/news/general-news/bbc-antisemitism-investigation-jewish-lord-john-mann-1236764004/",
+      "text": "BBC最近被推上了风口浪尖，因为政府启动了一项正式调查，专门查它有没有反犹主义问题。起因是多名犹太员工反映，工作环境充满敌意，甚至被要求‘证明自己是犹太人’。这事不是空穴来风，之前就有奥斯卡制片人卢西·孔起诉BBC，拿到40万英镑赔偿，说她因种族身份遭职场羞辱。现在政府顾问约翰·曼亲自带队，调查预计要到明年复活节才结束。BBC回应说已经做了反歧视培训，鼓励举报，但否认存在系统性问题。可问题是，如果只是个别现象，为什么会有这么多类似指控？这背后是不是有更深层的文化结构问题？公众关注的不仅是真相，更是媒体机构能否真正建立一个包容、安全的工作环境。"
     },
     {
       "type": "story",
       "article_index": 14,
       "category": "娱乐文化",
-      "title": "《饥饿游戏：鸣响的收割》五日票房预计超8500万美元",
-      "source_url": "https://deadline.com/2026/11/box-office-hunger-games-hexed-focker-in-law-thanksgiving-1237233281/",
-      "text": "《饥饿游戏：鸣响的收割》这周票房表现炸了，五天预计超过8500万美元，仅次于2013年的第二部，创下了系列最佳感恩节成绩。首日票房就飙到1598万，是这个系列周二单日最高纪录。影片上映才几天，北美累计已经破1.48亿，很快就要超过前作《鸣鸟与蛇之歌》的1.66亿总票房。全球首周末收了2.26亿，主要靠4018家影院上映撑起来。现在感恩节档期没啥大制作，像《魔法黑森林2》和《奇异世界》都没来，这部片子就成了市场唯一支柱。Deadline评价说，它稳住了整个档期的票房预期。看来粉丝们对这个系列的热情，一点没减。"
+      "title": "104部影片角逐2027奥斯卡国际影片奖，创历史纪录",
+      "source_url": "https://www.hollywoodreporter.com/lists/2027-oscars-international-feature-contenders/",
+      "text": "2027年的奥斯卡国际影片奖，参选数量创了历史纪录——104部，比2020年的93部还多。这说明全球电影创作越来越活跃，尤其是非英语国家的导演们，都在争取这个舞台。西班牙、罗马尼亚、波兰、韩国、日本都有强片入围，像《La Bola Negra》《Fjord》这些都被看好。不过也有意外，新西兰提交的《Mārama》因为语言比例没达标，直接被取消资格。这个奖项有个硬门槛：非英语对白必须超过一半，而且得是海外制作。今年还多了个新通道，只要在戛纳、柏林、威尼斯三大电影节拿过最高奖，就能自动入围。这意味着，哪怕没经过传统选拔，也能进短名单。目前谁是领跑者还不清楚，竞争非常开放。最终结果要到2027年1月才揭晓，但这场角逐，已经提前让人看到了世界电影的多元与力量。"
     },
     {
       "type": "story",
       "article_index": 15,
       "category": "消费科技",
-      "title": "18家平台完成算法协商，覆盖超2500万新就业者",
-      "source_url": "https://www.ithome.com/1/032/610.htm",
-      "text": "你知道吗？现在有超过2500万的网约车司机、快递员、货运司机，他们的工作规则，终于开始被正式讨论了。截至11月10日，全国18家重点平台企业，包括滴滴、货拉拉这些大公司，已经跟劳动者代表完成了算法协商，签了协议。这可不是走个过场——他们承诺要让派单规则更透明，收入保障更稳，申诉机制更公平，还建立了关爱机制。听起来是不是有点像传统工厂里的集体谈判？其实这就是新就业形态下的“集体协商”。国家推动这个，是因为过去很多平台算法黑箱操作，抽成高、收入不稳，劳动者没话语权。这次是第一次把算法和劳动规则纳入制度化协商，标志着平台经济治理真正进入了一个新阶段。对打工人来说，意味着未来可能不再只是被系统随意调度，而是能参与规则制定。这是实实在在的权益进步。"
+      "title": "瑞士发生五起网络攻击，攻击者使用AI智能体，电力、供水与通信系统遭入侵",
+      "source_url": "https://www.ithome.com/1/033/131.htm",
+      "text": "最近瑞士出了件让人后背发凉的事——短短几天内，有五起针对关键基础设施的网络攻击，其中四起成功得手。受影响的包括电力、供水和通信这些咱们日常离不开的服务。更吓人的是，这次攻击用的不是传统黑客手法，而是AI智能体。听起来像科幻片，但真发生了。瑞士联邦网络安全局（BACS）在11月26号才公开通报，说攻击者利用AI自动执行入侵任务，比如扫描漏洞、尝试登录系统，但没说是哪个AI，也没说它是不是自己做决定，目前只是当作一种高效工具来用。这波攻击具体什么时候开始、谁干的，现在全没线索，连是个人还是组织都没定论。不过可以确定的是，被攻破的都是提供基础公共服务的企业，一旦出问题，可能影响成千上万的人。所以BACS赶紧提醒相关公司，得加强防护，定期查漏洞、做测试。这件事也给我们提了个醒：当AI开始帮坏人干活，传统的安全防线可能跟不上了。"
     },
     {
       "type": "story",
       "article_index": 16,
       "category": "消费科技",
-      "title": "推动优质数字文化产品出海",
-      "source_url": "https://www.ithome.com/1/032/601.htm",
-      "text": "你看过《庆余年》《诡秘之主》这些国产网文吗？以后它们可能不只是在国内火，还会大规模出海。商务部等八部门刚发布一个五年规划，明确要支持中国的网络文学、动漫、游戏这些数字文化产品走出去。同时，也欢迎国外的好剧、好电影进来。目标是到2030年，服务贸易占外贸总额的比例更高，知识密集型服务出口要达到50.5%。说白了，就是中国不光卖货，更要卖内容、卖创意。这背后是文化软实力的战略布局。以前我们靠制造业出海，现在是用故事、用IP去影响世界。比如一部爆款网剧，可能带动周边商品、海外粉丝社群甚至版权合作。这不是简单的出口，而是一整套文化生态的输出。对内容创作者来说，机会来了，但挑战也不小——得讲好中国故事，还得符合国际口味。"
+      "title": "美国智能手机出货量下滑：苹果份额升至57%",
+      "source_url": "https://www.ithome.com/1/033/093.htm",
+      "text": "你有没有发现，最近买手机越来越贵了？尤其是那些便宜的安卓机，好像越来越难找了。这背后其实有个挺关键的变化——2026年第三季度，美国智能手机出货量整体下滑了9%，但苹果却逆势增长，市场份额冲到了57%，成了唯一一个出货量没跌的主流品牌。 为什么会这样？核心原因出在芯片上。全球存储芯片供应紧张，导致成本一路飙升。这对安卓厂商打击特别大，尤其是主打性价比的中低端机型，本来利润就薄，现在连材料都撑不住了，只能减产或者涨价。而苹果不一样，它用的是自研芯片，从设计到生产基本全自己掌控，供应链更稳，抗通胀和成本波动的能力强得多。 结果就是市场越来越集中，前四大品牌加起来占了97%的份额，几乎成了巨头游戏。普通消费者可能感受不到太多选择，但长远看，这种格局会让创新更依赖少数几家公司，竞争也更容易变僵化。"
     },
     {
       "type": "story",
       "article_index": 17,
       "category": "消费科技",
-      "title": "全球首款RGB单芯片背光技术量产",
-      "source_url": "https://www.ithome.com/1/032/614.htm",
-      "text": "如果你最近在看高端液晶电视，可能会发现画质突然变好了。原因可能是全球首款RGB单芯片背光技术量产了。这是韩国首尔半导体子公司搞出来的WICOP Pixel技术，直接用红绿蓝三色独立光源，而不是传统的白光加滤镜。结果是色彩覆盖达到100% DCI-P3，也就是电影级色域，亮度峰值冲到3000尼特，比普通电视亮得多。关键是，它不用额外封装，芯片直接集成，省空间、降成本。这意味着未来高端电视可能更便宜，画质却更好。这对整个消费电子产业链都是个大利好。尤其是面板厂商，可以减少依赖进口的背光模组，提升自主性。虽然目前还没普及到所有机型，但一旦量产铺开，很可能成为中高端电视的新标准。简单说，就是让咱们家里的电视，看得更真、更亮、更省电。"
+      "title": "X平台推出青少年家长控制功能",
+      "source_url": "https://www.ithome.com/1/033/123.htm",
+      "text": "你有没有想过，孩子用社交软件，到底在看什么、跟谁聊天？现在X平台终于给家长提供了一个可控的入口。他们刚上线了一套专门针对13到17岁青少年用户的家长控制功能。简单说，爸妈可以设定每天能用多久，能不能随便关注新粉丝，还能自动过滤掉一些敏感内容，比如暴力或不当信息。但关键的是，这些设置不包括查看孩子的私信，也不让家长翻他们的浏览记录——这算是留了底线，保护青少年的隐私和自主权。 为什么突然推这个？其实背后是越来越多家长担心孩子沉迷手机、接触不良信息。X平台也意识到，光靠算法推荐不行，得给监护人一点工具。这套功能不是要监控孩子，而是帮家庭建立健康的使用习惯。它可能改变青少年用社交软件的方式，比如更自觉地管理时间，或者减少盲目追星、加陌生好友。 长远来看，这可能会成为行业标准。其他平台，比如Instagram、微博，说不定也会跟进。"
     },
     {
       "type": "story",
       "article_index": 18,
       "category": "消费科技",
-      "title": "知乎间接投资DeepSeek获回应",
-      "source_url": "https://www.ithome.com/1/032/582.htm",
-      "text": "知乎悄悄投了个大模型公司，叫DeepSeek。这事被曝光后，知乎CEO周源回应说，他们是通过一家股权投资合伙企业间接持股，比例是低个位数百分比，不算多，但属于长期战略投资。关键在于，这背后不是为了短期赚钱，而是想把内容平台和AI基础设施打通。你看，知乎本身是信息分发平台，现在也开始往大模型底层布局。这说明，未来的竞争，不只是谁的内容多，而是谁能控制技术底座。尽管知乎第三季度营收没增长，亏损反而扩大了，但这种投资行为，其实是为未来押注。毕竟大模型是下一代互联网的核心。不过市场也有疑虑：钱从哪来？会不会影响主业？但周源强调不会影响财务稳健。这步棋走得挺深——表面上是投资，实际上是构建一个内容+AI的生态闭环。对用户来说，未来可能看到更智能的问答、更精准的推荐。但对企业而言，这是一场烧钱的长跑，能不能赢，还得看后续落地能力。"
+      "title": "AI impersonation scammer sentenced to 47 months in prison",
+      "source_url": "https://www.engadget.com/2329150/man-sentenced-to-47-month-prison-sentence-after-using-ai-impersonate-streamer/",
+      "text": "你有没有想过，有一天你的钱可能被一个听起来像你朋友的声音骗走？最近美国就发生了这么一桩案子。有个叫大卫·安东尼·桑切斯的人，因为用AI伪造了知名游戏主播N3on的声音，骗了26万美金的加密货币，被判了47个月监禁。 事情是这样的：他先是冒充N3on本人，又假装是他的代表，用AI生成的语音跟项目方沟通，说要捐款、要转账，对方完全没怀疑，结果钱就这么没了。最吓人的是，这声音听起来就跟真人一模一样，连语气、节奏都模仿得特别像，普通人根本分不清。 这背后其实暴露了一个越来越严重的问题——AI深度伪造技术正在被用来搞金融诈骗。以前骗子可能还得学个口音，现在只要一段录音，就能复制出任何人的声音。尤其当目标是公众人物时，信任感更容易被利用。这件事也提醒我们，以后不管谁打电话、发语音，尤其是涉及钱的事，得多留个心眼。哪怕声音再熟，也得通过其他方式核实身份。"
     },
     {
       "type": "story",
       "article_index": 19,
       "category": "消费科技",
-      "title": "S&P考虑下调英伟达信用评级",
-      "source_url": "https://techcrunch.com/2026/11/25/sp-considers-nvidia-credit-downgrade-over-governance-and-key-man-risks/",
-      "text": "英伟达，这家AI芯片巨头，可能要被降级了。标准普尔正在考虑把它的信用评级从AA降到AA-，虽然还是投资级，但差别不小。为什么？因为公司太依赖一个人——黄仁勋。他曾经短暂被罢免，后来又复职，这件事引发了外界对公司治理结构的担忧。标准普尔特别指出，英伟达对单一领导人的高度依赖，构成了‘关键人物风险’。这可不是小事。因为英伟达要为未来5000亿美元的AI基础设施融资做担保，如果评级下调，借钱成本就会上升，连带影响那些依赖它担保的项目。换句话说，哪怕英伟达自己不缺钱，但一旦信用被怀疑，整个产业链的融资都会受影响。这反映出市场对科技巨头的审视越来越严格——再牛的公司，也不能只靠一个人撑起来。尤其在AI这么关键的领域，稳定性比速度更重要。所以这次风波，不只是评级变动，更是对科技企业治理模式的一次警醒。"
+      "title": "启境发布全新品牌LOGO，广汽与华为深度融合",
+      "source_url": "https://www.ithome.com/1/033/092.htm",
+      "text": "你有没有想过，一辆车的LOGO，背后可能藏着两家巨头的深度合作？最近，启境在华为乾崑生态大会上突然亮相了一个全新的盾形品牌标识，一下子把大家的注意力拉到了广汽和华为的合作上。这个新标志不是简单拼凑，而是把广汽几十年造车的扎实功底，跟华为在智能技术上的领先能力，真正焊死在一起。你看那个盾形设计，既像铠甲，也像一个承诺——从研发到制造，再到品控，双方已经不是简单的供应商关系，而是深度捆绑的伙伴。 这背后其实是个大动作。启境现在已经有GT7和GX7两辆车量产上市了，双车矩阵已经跑起来了。更关键的是，他们的服务网络已经覆盖全国90多个城市，线上线下双业态布局，意味着你买完车之后，维修、升级、远程支持这些事，基本不用愁。这不只是换了个logo，而是整个品牌逻辑的重构——从卖车变成提供‘人车家全生态’的长期体验。"
     },
     {
       "type": "story",
       "article_index": 20,
       "category": "Apple",
-      "title": "32州及开发者支持Epic，反对苹果SCOTUS上诉",
-      "source_url": "https://9to5mac.com/2026/11/25/major-developers-legal-experts-and-32-states-back-epic-in-apples-scotus-appeal/",
-      "text": "苹果又在打一场关键官司。这次不是和谁闹矛盾，而是直接把案子告到了美国最高法院。事情的起因是Epic Games当初因为苹果强制使用内部支付系统，一怒之下起诉了苹果，结果法院判Epic赢了。但苹果不服，上诉到最高法院。现在有32个州，还有微软、Spotify、Match Group这些大公司一起站出来，支持Epic。他们说，苹果虽然表面上解除了禁令，但实际上用新规则变相限制外部支付，这已经算是在故意规避法院判决，应该被认定为民事藐视法庭。这场官司背后，其实是在问一个根本问题：科技巨头到底该不该被更严格地管？如果苹果赢了，可能以后法院对大公司的约束力就弱了；要是输了，那反垄断的执行可能会变得更狠。现在司法系统正面临一个难题——怎么平衡企业自主权和消费者的选择权。这不只是苹果一家的事，而是整个数字市场公平竞争的风向标。"
+      "title": "Apple still working on giant foldable iPad, launch uncertain amid technical hurdles",
+      "source_url": "https://www.macrumors.com/2026/11/26/apple-still-working-on-giant-foldable-ipad/",
+      "text": "苹果还在搞一个大得离谱的折叠iPad，可能要到2029年才见得到，但能不能真卖出去，现在还说不准。这台设备内部代号叫J312，展开后屏幕接近20英寸，差不多是普通平板的两倍大。价格估计在三到五千元之间，属于奢侈品级别。问题是，这玩意儿现在连操作系统都没定下来——到底是用iPadOS、macOS，还是全新系统？更麻烦的是，屏幕制造良率低，重量也压不住，光是这两个技术难题就让原定2027、2028年的计划一拖再拖。就连苹果硬件主管约翰·特恩斯都承认，它现在还只是个实验项目，没准最后就不了了之。之前还有消息说苹果取消了折叠 MacBook 的计划，但不确定是不是同一个项目。总之，这个大平板，听着很酷，但离真正落地，还差得远。"
     },
     {
       "type": "story",
       "article_index": 21,
       "category": "Apple",
-      "title": "WhatsApp上线定时发送消息功能",
-      "source_url": "https://www.macrumors.com/2026/11/25/whatsapp-finally-adds-scheduled-messages/",
-      "text": "WhatsApp终于上线了一个等了很久的功能——定时发送消息。你现在可以设置，从10分钟到14天后，自动发一条文字、图片或者视频。这个功能已经在全球陆续推送，而且加密保护一点没变，接收方完全看不出这条消息是提前安排好的。这其实是补上了WhatsApp长期的一个短板。以前苹果iMessage早就有了“稍后发送”，用户一直觉得不方便。现在WhatsApp跟上，说明即时通讯工具之间的竞争越来越拼用户体验了。不只是功能对标，更是看谁能更好地帮人管理信息节奏。尤其对经常跨时区沟通、想在合适时间发消息的人来说，这个功能简直是刚需。背后反映的是，大家对效率和控制感的要求越来越高，而平台也在不断优化细节来留住用户。"
+      "title": "Apple将开印度新店，12月10日揭幕",
+      "source_url": "https://9to5mac.com/2026/11/26/check-out-this-beautiful-wallpaper-to-celebrate-the-opening-of-the-latest-apple-store/",
+      "text": "苹果要在印度开新店了，12月10号正式营业，地点在海德拉巴的Lakeshore Mall。这是苹果在印度的第七家直营店，专门配了新壁纸庆祝。你可能好奇，为什么突然在印度开店？其实背后有政策原因——印度政府要求外国品牌在当地生产，才能避免高关税。所以苹果这几年拼命建厂，现在所有销往美国的iPhone，都是在印度生产的。这家新店不仅是卖货，更是苹果对印度这个全球第二大人口市场长期布局的信号。他们不只想卖手机，还想建立本地品牌形象。看来，印度不只是制造中心，也开始成为消费市场的重点。"
     },
     {
       "type": "story",
       "article_index": 22,
       "category": "Apple",
-      "title": "MacBook Air或2027年末至2028年换装OLED屏",
-      "source_url": "https://www.macrumors.com/2026/11/25/oled-macbook-air-2027-2028/",
-      "text": "MacBook Air可能要换OLED屏了，但得等到2027年底或2028年。这是彭博社记者马克·古尔曼透露的消息。他提到，苹果计划在那时给MacBook Air来一次重大设计更新，最有可能的就是引入OLED屏幕。不过别急，2027年初会先出搭载M6芯片的常规升级，外观不变。要知道，OLED屏已经在2026年的Pro版MacBook Pro上用了，叫PROLED，起售价高达2899美元。而现在的MacBook Air才1299美元，差了快两倍。所以苹果很可能不会一下子全换成OLED，而是保留LCD版本，维持价格梯度。毕竟MacBook Air是卖得最好的笔记本之一，上一次大改是2022年，之后就只是小修小补。这次如果真换屏，对视觉体验是个飞跃，但能不能让普通用户买得起，还得看苹果怎么拿捏成本和定位。"
+      "title": "Kodak推出带电子墨水屏的AirTag替代品",
+      "source_url": "https://www.macrumors.com/2026/11/26/kodak-launches-airtag-rival/",
+      "text": "Kodak出了个新玩意儿，叫SlideTag，34.99美元，是个能当AirTag用的追踪器，但长得不一样。它有个1.54英寸的彩色电子墨水屏，能显示照片、联系人信息，甚至待办事项，还能滑动换图。关键是，它不用一直耗电，静态画面可以一直挂着。它通过蓝牙连接，也能用Kodak Memory Link应用上传内容。不过缺点也有：没有Ultra Wideband精准定位，电池寿命也不长。但它最大的亮点是，把复古胶片风格和现代科技结合，特别适合喜欢个性化、爱收藏的人。虽然功能不如AirTag全面，但视觉上确实让人眼前一亮，算是给物品追踪带来了点新玩法。"
     },
     {
       "type": "story",
       "article_index": 23,
       "category": "Apple",
-      "title": "苹果在拉美智能手机市场逆势提升份额",
-      "source_url": "https://9to5mac.com/2026/11/25/report-apple-gains-ground-as-latin-american-smartphone-shipments-plunge-24-in-q3/",
-      "text": "在拉美智能手机市场一片惨淡的情况下，苹果却逆势增长。Counterpoint Research报告显示，2026年第三季度，拉美整体手机出货量暴跌24%。但苹果的份额反而从7%升到了9%，出货量降幅只有10%，是五大品牌里最少的，排名也从第五冲到了第四。这背后有个关键原因：iPhone 18 Pro系列正好在这个季度末发布，智利首次加入首发行列，和巴西、墨西哥同步开售。更重要的是，供应稳定。全球内存短缺导致很多品牌缺货，巴西、墨西哥、哥伦比亚出货量分别跌了22%、26%、28%。而苹果靠强大的供应链管理，顶住了压力。再加上拉美地区政治不稳、通胀高企、家庭预算紧，消费者更愿意买可靠的大品牌。苹果的高端机型在这种环境下反而显得更抗跌。不过，内存价格压力预计还要持续到2027年二季度，供应紧张可能延续到年底。所以苹果这次的领先，不只是产品好，更是供应链硬。"
+      "title": "X平台上线青少年家长控制功能",
+      "source_url": "https://9to5mac.com/2026/11/26/x-finally-gets-six-parental-controls-for-teen-accounts-but-kids-must-consent/",
+      "text": "X平台终于上线了青少年家长控制功能，六项设置包括内容过滤、使用时间限制，但有个关键前提：必须孩子自己同意才能生效。等他们年满18岁，这些限制自动解除。这意味着家长不能偷偷看孩子的私信或搜索记录，也不能替他们发内容。这种设计强调双向同意，尊重未成年人的自主权。过去X平台在这方面几乎空白，这次更新算是补上了短板。目前主流社交平台都在加强青少年保护，比如Meta、TikTok都有类似机制。X这次的做法，既回应了监管压力，又没过度侵犯隐私，算是平衡了安全与自由。"
     },
     {
       "type": "story",
       "article_index": 24,
       "category": "Apple",
-      "title": "AI语音转写应用Wispr Flow升级Canto-2模型",
-      "source_url": "https://9to5mac.com/2026/11/25/wispr-flow-improves-dictation-accuracy-with-new-canto-2-speech-to-text-model/",
-      "text": "一款叫Wispr Flow的AI语音转写应用，最近推出了新一代模型Canto-2，性能提升明显。它现在已经在Mac、iPhone、Windows和Android上上线，正在逐步推到全球。最亮眼的是，它在14种语言上的平均错误率，从9.9%降到6.3%，下降了36%。英文识别错误率也从3.2%降到2.7%。更厉害的是，对专业术语和难词的识别准确率，从41%猛增到69%，而且没有多出乱插的词。这个模型规模是前一代的10倍，内部测试显示，在14种语言上表现都比竞品强。在Hugging Face的公开基准测试中，目前排第三，虽然还没正式上榜。关键是，它特别适合真实场景——比如有背景噪音、用手机或笔记本麦克风，甚至中途重启也能接上。如果你自己建了个1000条词汇的词典，对常见术语的识别准确率还能保持在92%。"
+      "title": "iPhone 20 Pro或推陶瓷版，传闻存疑",
+      "source_url": "https://9to5mac.com/2026/11/26/sketchy-suggestion-of-ceramic-iphone-20-pro/",
+      "text": "网上有人说苹果要出iPhone 20 Pro的陶瓷版，听起来挺高级，但很可能只是个误会。唯一依据是一张概念图，显示背板是陶瓷材质，可实际上，苹果从来没提过这事。而且从技术角度看，旗舰机用陶瓷背板，成本高、良率低，尤其iPhone 20 Pro还要换生产线，难度更大。苹果通常只在成熟工艺上迭代，不会在新机型上冒这么大的风险。另外，传闻可能源于对iPhone Air上那块陶瓷护盾技术的误解——那是用来抗摔的，不是做整机背板的。目前没有任何官方消息支持，基本就是市场猜测。别太当真，更别期待。"
     },
     {
       "type": "closing",
@@ -216,158 +216,158 @@
   ],
   "sources": [
     {
-      "title": "中国部署2030年建成新一代通信网",
+      "title": "高交会开幕：创新引领变革，合作链接全球",
       "url": "https://www.news.cn/fortune/20261126/db6f0d4f9cf84060a39c9a85709b5e64/c.html",
       "category": "国内新闻"
     },
     {
-      "title": "国家出台“一老一小”服务体系建设方案",
-      "url": "https://www.chinanews.com.cn/sh/2026/11-26/10737951.shtml",
+      "title": "四大行签超6000亿回购增持贷款合同",
+      "url": "https://www.chinanews.com.cn/cj/2026/11-26/10738467.shtml",
       "category": "国内新闻"
     },
     {
-      "title": "习近平对党内法规工作作出重要指示",
-      "url": "https://tv.cctv.com/2026/11/25/VIDEr4AxdVm5O1yNEumZwu9I261125.shtml",
+      "title": "6G试点启动，布局未来通信底层能力",
+      "url": "https://www.news.cn/tech/20261126/4894302d59d64cf6b7cba87b20186aa0/c.html",
       "category": "国内新闻"
     },
     {
-      "title": "中国启动6G创新发展部省协同试点",
-      "url": "https://www.chinanews.com.cn/cj/2026/11-26/10738003.shtml",
+      "title": "中国空间站向全球开放科研机会",
+      "url": "https://tv.cctv.com/2026/11/26/VIDEbPrIkvX98jnu5RZOzvsg261126.shtml",
       "category": "国内新闻"
     },
     {
-      "title": "广东男童疑被生父女友伤害致死案一审开庭",
-      "url": "https://www.thepaper.cn/newsDetail_forward_34562804",
+      "title": "美拟对华加征关税最高至40% 中方回应将维护权益",
+      "url": "https://www.zaobao.com.sg/news/china/story20261126-10064339",
       "category": "国内新闻"
     },
     {
-      "title": "朝鲜领导人称应扩大战术核武器部署",
-      "url": "https://www.aljazeera.com/news/2026/11/26/kim-jong-un-says-north-korea-should-widen-deployment-of-tactical-nukes?traffic_source=rss",
+      "title": "伊朗无人机袭击致两名意大利技术人员死亡",
+      "url": "https://www.bbc.co.uk/news/articles/c39w9y5dx4k5o?at_medium=RSS&at_campaign=rss",
       "category": "国际政治"
     },
     {
-      "title": "乌克兰称袭击俄罗斯萨瓦塞利卡空军基地，击损五架飞机",
-      "url": "https://www.aljazeera.com/news/2026/11/26/ukraine-attacks-russian-military-base-says-five-planes-struck?traffic_source=rss",
+      "title": "伊拉克库尔德地区爆发大规模抗议",
+      "url": "https://www.dw.com/en/protests-in-iraqi-kurdistan-at-plans-for-government-in-baghdad-to-take-over-oil-border-crossings/a-80065994?maca=en-rss-en-all-1573-rdf",
       "category": "国际政治"
     },
     {
-      "title": "美国风暴致纽约感恩节游行史上首次推迟",
-      "url": "https://www.france24.com/en/americas/20261126-powerful-us-storm-forces-historic-postponement-of-thanksgiving-day-parade-in-new-york",
+      "title": "卡塔尔、埃及领导人讨论加沙停火与地区安全",
+      "url": "https://www.aljazeera.com/news/2026/11/26/qatari-egyptian-leaders-discuss-gaza-ceasefire-and-regional-security?traffic_source=rss",
       "category": "国际政治"
     },
     {
-      "title": "开罗环城公路燃料卡车翻覆起火致至少31人死亡",
-      "url": "https://www.france24.com/en/africa/20261126-at-least-31-killed-in-cairo-fire-after-fuel-truck-overturns-on-busy-highway",
+      "title": "德国总统施泰因迈尔在非洲最后一趟访问中呼吁德企加大投资并承担风险",
+      "url": "https://www.dw.com/en/on-his-last-africa-trip-steinmeier-urges-german-firms-to-invest-and-take-risks-as-china-pushes-ahead/a-80067717?maca=en-rss-en-all-1573-rdf",
       "category": "国际政治"
     },
     {
-      "title": "美军在爱荷华州成功引爆数吨有毒炸药",
-      "url": "https://www.bbc.co.uk/news/articles/cwg7l5ve251ko?at_medium=RSS&at_campaign=rss",
+      "title": "柴油油轮在伊比萨附近倾覆致1人死亡，环境风险待评估",
+      "url": "https://www.bbc.co.uk/news/articles/c9gklryvj24do?at_medium=RSS&at_campaign=rss",
       "category": "国际政治"
     },
     {
-      "title": "微短剧全球收入达200亿美元，但海外盈利仍薄弱",
-      "url": "https://variety.com/2026/tv/news/microdrama-revenue-20-billion-2026-profits-thin-1236958647/",
+      "title": "《饥饿游戏：破晓》感恩节前夜票房1500万美元，五日预估8500万美元",
+      "url": "https://variety.com/2026/film/box-office/sunrise-on-the-reaping-box-office-hunger-games-thanksgiving-eve-focker-in-law-1236958999/",
       "category": "娱乐文化"
     },
     {
-      "title": "FTX前高管怒批Netflix剧集《慈善家》种族刻板印象",
-      "url": "https://variety.com/2026/tv/news/ftx-constance-wang-slams-altruists-portrayal-racist-netflix-1236958694/",
+      "title": "英国著名美术设计师马克·蒂尔德斯利去世，享年63岁",
+      "url": "https://variety.com/2026/film/global/mark-tildesley-dead-no-time-to-die-production-designer-1236958968/",
       "category": "娱乐文化"
     },
     {
-      "title": "纽约市长扎赫兰·曼达尼宣布梅西感恩节大游行因风暴推迟至周六",
-      "url": "https://deadline.com/2026/11/mayor-zohran-mamdani-macys-thanksgiving-day-parade-postponed-1237233704/",
+      "title": "Record Store Day黑五预售预告：诺亚·卡汉新专辑最受期待",
+      "url": "https://variety.com/2026/music/news/record-store-day-black-friday-founder-interview-releases-1236958941/",
       "category": "娱乐文化"
     },
     {
-      "title": "Indian Filmmaker C.V. Rao Becomes First South Indian SMPTE Fellow",
-      "url": "https://variety.com/2026/film/news/baahubali-rrr-tech-chief-weaning-india-off-overseas-facilities-1236958697/",
+      "title": "BBC遭调查：政府顾问启动反犹主义专项调查",
+      "url": "https://www.hollywoodreporter.com/news/general-news/bbc-antisemitism-investigation-jewish-lord-john-mann-1236764004/",
       "category": "娱乐文化"
     },
     {
-      "title": "《饥饿游戏：鸣响的收割》五日票房预计超8500万美元",
-      "url": "https://deadline.com/2026/11/box-office-hunger-games-hexed-focker-in-law-thanksgiving-1237233281/",
+      "title": "104部影片角逐2027奥斯卡国际影片奖，创历史纪录",
+      "url": "https://www.hollywoodreporter.com/lists/2027-oscars-international-feature-contenders/",
       "category": "娱乐文化"
     },
     {
-      "title": "18家平台完成算法协商，覆盖超2500万新就业者",
-      "url": "https://www.ithome.com/1/032/610.htm",
+      "title": "瑞士发生五起网络攻击，攻击者使用AI智能体，电力、供水与通信系统遭入侵",
+      "url": "https://www.ithome.com/1/033/131.htm",
       "category": "消费科技"
     },
     {
-      "title": "推动优质数字文化产品出海",
-      "url": "https://www.ithome.com/1/032/601.htm",
+      "title": "美国智能手机出货量下滑：苹果份额升至57%",
+      "url": "https://www.ithome.com/1/033/093.htm",
       "category": "消费科技"
     },
     {
-      "title": "全球首款RGB单芯片背光技术量产",
-      "url": "https://www.ithome.com/1/032/614.htm",
+      "title": "X平台推出青少年家长控制功能",
+      "url": "https://www.ithome.com/1/033/123.htm",
       "category": "消费科技"
     },
     {
-      "title": "知乎间接投资DeepSeek获回应",
-      "url": "https://www.ithome.com/1/032/582.htm",
+      "title": "AI impersonation scammer sentenced to 47 months in prison",
+      "url": "https://www.engadget.com/2329150/man-sentenced-to-47-month-prison-sentence-after-using-ai-impersonate-streamer/",
       "category": "消费科技"
     },
     {
-      "title": "S&P考虑下调英伟达信用评级",
-      "url": "https://techcrunch.com/2026/11/25/sp-considers-nvidia-credit-downgrade-over-governance-and-key-man-risks/",
+      "title": "启境发布全新品牌LOGO，广汽与华为深度融合",
+      "url": "https://www.ithome.com/1/033/092.htm",
       "category": "消费科技"
     },
     {
-      "title": "32州及开发者支持Epic，反对苹果SCOTUS上诉",
-      "url": "https://9to5mac.com/2026/11/25/major-developers-legal-experts-and-32-states-back-epic-in-apples-scotus-appeal/",
+      "title": "Apple still working on giant foldable iPad, launch uncertain amid technical hurdles",
+      "url": "https://www.macrumors.com/2026/11/26/apple-still-working-on-giant-foldable-ipad/",
       "category": "Apple"
     },
     {
-      "title": "WhatsApp上线定时发送消息功能",
-      "url": "https://www.macrumors.com/2026/11/25/whatsapp-finally-adds-scheduled-messages/",
+      "title": "Apple将开印度新店，12月10日揭幕",
+      "url": "https://9to5mac.com/2026/11/26/check-out-this-beautiful-wallpaper-to-celebrate-the-opening-of-the-latest-apple-store/",
       "category": "Apple"
     },
     {
-      "title": "MacBook Air或2027年末至2028年换装OLED屏",
-      "url": "https://www.macrumors.com/2026/11/25/oled-macbook-air-2027-2028/",
+      "title": "Kodak推出带电子墨水屏的AirTag替代品",
+      "url": "https://www.macrumors.com/2026/11/26/kodak-launches-airtag-rival/",
       "category": "Apple"
     },
     {
-      "title": "苹果在拉美智能手机市场逆势提升份额",
-      "url": "https://9to5mac.com/2026/11/25/report-apple-gains-ground-as-latin-american-smartphone-shipments-plunge-24-in-q3/",
+      "title": "X平台上线青少年家长控制功能",
+      "url": "https://9to5mac.com/2026/11/26/x-finally-gets-six-parental-controls-for-teen-accounts-but-kids-must-consent/",
       "category": "Apple"
     },
     {
-      "title": "AI语音转写应用Wispr Flow升级Canto-2模型",
-      "url": "https://9to5mac.com/2026/11/25/wispr-flow-improves-dictation-accuracy-with-new-canto-2-speech-to-text-model/",
+      "title": "iPhone 20 Pro或推陶瓷版，传闻存疑",
+      "url": "https://9to5mac.com/2026/11/26/sketchy-suggestion-of-ceramic-iphone-20-pro/",
       "category": "Apple"
     }
   ],
-  "audio_url": "podcast/0f86f7f74b74430e.mp3",
+  "audio_url": "podcast/d98db17dfbe08e1b.mp3",
   "article_audio": {
-    "0": "podcast/0f86f7f74b74430e/article-01.mp3",
-    "1": "podcast/0f86f7f74b74430e/article-02.mp3",
-    "2": "podcast/0f86f7f74b74430e/article-03.mp3",
-    "3": "podcast/0f86f7f74b74430e/article-04.mp3",
-    "4": "podcast/0f86f7f74b74430e/article-05.mp3",
-    "5": "podcast/0f86f7f74b74430e/article-06.mp3",
-    "6": "podcast/0f86f7f74b74430e/article-07.mp3",
-    "7": "podcast/0f86f7f74b74430e/article-08.mp3",
-    "8": "podcast/0f86f7f74b74430e/article-09.mp3",
-    "9": "podcast/0f86f7f74b74430e/article-10.mp3",
-    "10": "podcast/0f86f7f74b74430e/article-11.mp3",
-    "11": "podcast/0f86f7f74b74430e/article-12.mp3",
-    "12": "podcast/0f86f7f74b74430e/article-13.mp3",
-    "13": "podcast/0f86f7f74b74430e/article-14.mp3",
-    "14": "podcast/0f86f7f74b74430e/article-15.mp3",
-    "15": "podcast/0f86f7f74b74430e/article-16.mp3",
-    "16": "podcast/0f86f7f74b74430e/article-17.mp3",
-    "17": "podcast/0f86f7f74b74430e/article-18.mp3",
-    "18": "podcast/0f86f7f74b74430e/article-19.mp3",
-    "19": "podcast/0f86f7f74b74430e/article-20.mp3",
-    "20": "podcast/0f86f7f74b74430e/article-21.mp3",
-    "21": "podcast/0f86f7f74b74430e/article-22.mp3",
-    "22": "podcast/0f86f7f74b74430e/article-23.mp3",
-    "23": "podcast/0f86f7f74b74430e/article-24.mp3",
-    "24": "podcast/0f86f7f74b74430e/article-25.mp3"
+    "0": "podcast/d98db17dfbe08e1b/article-01.mp3",
+    "1": "podcast/d98db17dfbe08e1b/article-02.mp3",
+    "2": "podcast/d98db17dfbe08e1b/article-03.mp3",
+    "3": "podcast/d98db17dfbe08e1b/article-04.mp3",
+    "4": "podcast/d98db17dfbe08e1b/article-05.mp3",
+    "5": "podcast/d98db17dfbe08e1b/article-06.mp3",
+    "6": "podcast/d98db17dfbe08e1b/article-07.mp3",
+    "7": "podcast/d98db17dfbe08e1b/article-08.mp3",
+    "8": "podcast/d98db17dfbe08e1b/article-09.mp3",
+    "9": "podcast/d98db17dfbe08e1b/article-10.mp3",
+    "10": "podcast/d98db17dfbe08e1b/article-11.mp3",
+    "11": "podcast/d98db17dfbe08e1b/article-12.mp3",
+    "12": "podcast/d98db17dfbe08e1b/article-13.mp3",
+    "13": "podcast/d98db17dfbe08e1b/article-14.mp3",
+    "14": "podcast/d98db17dfbe08e1b/article-15.mp3",
+    "15": "podcast/d98db17dfbe08e1b/article-16.mp3",
+    "16": "podcast/d98db17dfbe08e1b/article-17.mp3",
+    "17": "podcast/d98db17dfbe08e1b/article-18.mp3",
+    "18": "podcast/d98db17dfbe08e1b/article-19.mp3",
+    "19": "podcast/d98db17dfbe08e1b/article-20.mp3",
+    "20": "podcast/d98db17dfbe08e1b/article-21.mp3",
+    "21": "podcast/d98db17dfbe08e1b/article-22.mp3",
+    "22": "podcast/d98db17dfbe08e1b/article-23.mp3",
+    "23": "podcast/d98db17dfbe08e1b/article-24.mp3",
+    "24": "podcast/d98db17dfbe08e1b/article-25.mp3"
   },
   "tts_model": "qwen-audio-3.1-tts-flash",
   "tts_voice": "longshuo_v3.1",
