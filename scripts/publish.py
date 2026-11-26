@@ -15,6 +15,7 @@ import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 
 from editorial_review import UnverifiedStory, audit_edition_images, audit_story
+from text_completion import text_completion
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
@@ -331,8 +332,8 @@ def collect():
 
 def generate(items):
     key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
-    if not key:
-        raise RuntimeError("DEEPSEEK_API_KEY is missing; keeping previous edition.")
+    if not key and not os.environ.get("DASHSCOPE_API_KEY", "").strip():
+        raise RuntimeError("Text model credentials are missing; keeping previous edition.")
     if any(sum(item["category"] == category for item in items) < STORIES_PER_CATEGORY for category in CATEGORIES):
         raise RuntimeError("Insufficient recent sourced coverage; keeping previous edition.")
     model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
@@ -416,12 +417,6 @@ def generate(items):
     def ask(messages):
         payload = {"model": model, "temperature": 0.15,
                    "response_format": {"type": "json_object"}, "messages": messages}
-        req = urllib.request.Request(
-            "https://api.deepseek.com/chat/completions",
-            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-            headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-            method="POST",
-        )
         # A model may occasionally return truncated or malformed JSON even in
         # json_object mode. Retry the *same* editorial request; never publish
         # guessed/repaired article data.
@@ -435,14 +430,7 @@ def generate(items):
                 )}
             ]
             retry_payload = dict(payload, messages=retry_messages)
-            retry_req = urllib.request.Request(
-                "https://api.deepseek.com/chat/completions",
-                data=json.dumps(retry_payload, ensure_ascii=False).encode("utf-8"),
-                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-                method="POST",
-            )
-            with urllib.request.urlopen(retry_req, timeout=120) as response:
-                result = json.load(response)
+            result = text_completion(retry_payload, key, timeout=120)
             choice = result["choices"][0]
             content = choice.get("message", {}).get("content", "")
             try:

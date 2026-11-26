@@ -15,6 +15,8 @@ import re
 import urllib.request
 import xml.etree.ElementTree as ET
 
+from text_completion import text_completion
+
 ROOT=Path(__file__).resolve().parents[1]
 DOCS=ROOT/"docs"
 OUT=DOCS/"podcast"
@@ -61,15 +63,8 @@ def rewrite_story_group(articles, key):
             {"role":"user","content":json.dumps(articles,ensure_ascii=False)},
         ],
     }
-    request=urllib.request.Request(
-        "https://api.deepseek.com/chat/completions",
-        data=json.dumps(payload,ensure_ascii=False).encode("utf-8"),
-        headers={"Authorization":"Bearer "+key,"Content-Type":"application/json"},
-        method="POST",
-    )
     try:
-        with urllib.request.urlopen(request,timeout=180) as response:
-            completion=json.load(response)
+        completion=text_completion(payload,key,timeout=180)
         choice=completion["choices"][0]
         if choice["finish_reason"]!="stop":
             raise ValueError("Incomplete narration response")
@@ -97,7 +92,7 @@ def rewrite_story_group(articles, key):
             result.append(text)
         usage=completion.get("usage",{})
         print(f"Podcast narration rewritten: {len(result)} stories; "
-              f"DeepSeek input/output tokens: {usage.get('prompt_tokens','?')}/{usage.get('completion_tokens','?')}",flush=True)
+              f"Input/output tokens: {usage.get('prompt_tokens','?')}/{usage.get('completion_tokens','?')}",flush=True)
         return result
     except (OSError,ValueError,KeyError,IndexError,TypeError) as exc:
         detail=str(exc) if type(exc) is ValueError else type(exc).__name__
@@ -106,7 +101,7 @@ def rewrite_story_group(articles, key):
 
 def podcast_narration(articles):
     key=os.getenv("DEEPSEEK_API_KEY","").strip()
-    if not key:
+    if not key and not os.getenv("DASHSCOPE_API_KEY", "").strip():
         return None
     groups=[articles[start:start+5] for start in range(0,len(articles),5)]
 

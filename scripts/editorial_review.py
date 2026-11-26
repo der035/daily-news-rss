@@ -9,22 +9,21 @@ import socket
 import ssl
 import time
 from urllib.parse import urlsplit, urlunsplit
-from urllib.request import HTTPSHandler, HTTPRedirectHandler, Request, build_opener, urlopen
+from urllib.request import HTTPSHandler, HTTPRedirectHandler, Request, build_opener
 from urllib.error import HTTPError
 
-TEXT_URL = "https://api.deepseek.com/chat/completions"
+from text_completion import DEEPSEEK_URL, completion, dashscope_endpoints, text_completion
 
 
 def chat(url, key, model, messages, **options):
     payload = {"model": model, "temperature": 0, "messages": messages, **options}
-    request = Request(
-        url, data=json.dumps(payload, ensure_ascii=False).encode(),
-        headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
-    )
     for attempt in range(2):
         try:
-            with urlopen(request, timeout=65) as response:
-                choice = json.load(response)["choices"][0]
+            result = (
+                text_completion(payload, key, timeout=65, fallback_model="qwen-plus")
+                if url == DEEPSEEK_URL else completion(url, key, payload, timeout=65)
+            )
+            choice = result["choices"][0]
             if choice.get("finish_reason") != "stop":
                 raise ValueError("Review response incomplete")
             content = choice["message"]["content"].strip()
@@ -62,7 +61,7 @@ def review_text(article, sources, terms, key, model, allow_edits=2):
             for source in sources
         ],
     }
-    result = chat(TEXT_URL, key, model, [
+    result = chat(DEEPSEEK_URL, key, model, [
         {"role": "system", "content": prompt},
         {"role": "user", "content": json.dumps(material, ensure_ascii=False)},
     ], response_format={"type": "json_object"})
@@ -189,9 +188,7 @@ def audit_story(article, sources, glossary, key, model):
 def vision_connection():
     key = os.environ.get("DASHSCOPE_API_KEY", "").strip()
     workspace = os.environ.get("DASHSCOPE_WORKSPACE_ID", "").strip()
-    endpoints = ["https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"]
-    if re.fullmatch(r"[a-zA-Z0-9_-]{4,128}", workspace):
-        endpoints.insert(0, f"https://{workspace}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions")
+    endpoints = dashscope_endpoints(workspace)
     probe_image = "https://p1.img.cntv.cn/photoworkspace/contentimg/2026/11/23/2026112319595746517.jpg"
     if key:
         try:
