@@ -17,6 +17,8 @@ on:
   schedule:
     # Avoid GitHub Actions top-of-hour congestion (07:50 Beijing time).
     - cron: '50 23 * * *'
+    # Give a delayed or missed primary run a second opportunity (09:17 Beijing time).
+    - cron: '17 1 * * *'
 permissions:
   contents: write
 concurrency:
@@ -52,11 +54,47 @@ jobs:
           print("runner_started_beijing:", now.astimezone(datetime.timezone(datetime.timedelta(hours=8))).isoformat())
           print("note: runner start is not the exact scheduler enqueue time; compare with run created_at via Actions API")
           PY
+      - name: Check whether today's edition is already published
+        id: edition
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          git fetch origin main
+          python3 - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          import subprocess
+          import xml.etree.ElementTree as ET
+          from email.utils import parsedate_to_datetime
+          from zoneinfo import ZoneInfo
+
+          timezone = ZoneInfo("Asia/Shanghai")
+          today = dt.datetime.now(timezone).date()
+
+          def read_published(path):
+              return subprocess.check_output(["git", "show", f"origin/main:{path}"], text=True)
+
+          try:
+              feed = ET.fromstring(read_published("docs/feed.xml"))
+              build_date = parsedate_to_datetime(feed.findtext("./channel/lastBuildDate", ""))
+              podcast = json.loads(read_published("docs/podcast/latest.json"))
+              already_published = (
+                  build_date.astimezone(timezone).date() == today
+                  and podcast.get("date") == today.isoformat()
+                  and podcast.get("status") == "audio_ready"
+              )
+          except (subprocess.CalledProcessError, ET.ParseError, ValueError, TypeError):
+              already_published = False
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"already_published={str(already_published).lower()}", file=output)
+          print(f"Beijing edition {today} already published: {already_published}")
+          PY
       - name: Generate Apple home screen icon
-        if: ${{ !inputs.audio_only }}
+        if: ${{ steps.edition.outputs.already_published != 'true' && !inputs.audio_only }}
         run: python3 scripts/make_icon.py
       - name: Generate and review sourced digest
-        if: ${{ inputs.preview_only || !inputs.audio_only }}
+        if: ${{ steps.edition.outputs.already_published != 'true' && (inputs.preview_only || !inputs.audio_only) }}
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_MODEL: deepseek-chat
@@ -64,6 +102,7 @@ jobs:
           DASHSCOPE_WORKSPACE_ID: ${{ secrets.DASHSCOPE_WORKSPACE_ID }}
         run: python3 scripts/publish.py
       - name: Validate generated artifacts
+        if: ${{ steps.edition.outputs.already_published != 'true' }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -78,13 +117,13 @@ jobs:
           assert html.count('class="story"') == 25, 'Expected twenty-five article cards'
           PY
       - name: Install audio tools
-        if: ${{ !inputs.preview_only }}
+        if: ${{ steps.edition.outputs.already_published != 'true' && !inputs.preview_only }}
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg
           ffmpeg -version | head -n 1
       - name: Prepare source-grounded podcast transcript
-        if: ${{ !inputs.preview_only }}
+        if: ${{ steps.edition.outputs.already_published != 'true' && !inputs.preview_only }}
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           DEEPSEEK_MODEL: deepseek-chat
@@ -100,6 +139,7 @@ jobs:
           python3 -m pip install --quiet 'dashscope>=2.0.1'
           python3 scripts/build_podcast.py
       - name: Validate browser JavaScript syntax
+        if: ${{ steps.edition.outputs.already_published != 'true' }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -126,7 +166,7 @@ jobs:
           PY
           node --check /tmp/daily-news-inline.js
       - name: Commit publication
-        if: ${{ !inputs.preview_only }}
+        if: ${{ steps.edition.outputs.already_published != 'true' && !inputs.preview_only }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
