@@ -2,6 +2,10 @@ name: Publish verified daily digest
 on:
   workflow_dispatch:
     inputs:
+      linux_timer:
+        description: Apply the scheduled edition check for the Ubuntu timer
+        type: boolean
+        default: false
       vision_check_only:
         description: Check the visual review connection using known news photos
         type: boolean
@@ -56,7 +60,7 @@ jobs:
           PY
       - name: Check whether today's edition is already published
         id: edition
-        if: ${{ github.event_name == 'schedule' }}
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.linux_timer && !inputs.preview_only && !inputs.audio_only) }}
         run: |
           git fetch origin main
           python3 - <<'PY'
