@@ -157,7 +157,7 @@
       "type": "story",
       "article_index": 18,
       "category": "消费科技",
-      "title": "AI impersonation scammer sentenced to 47 months in prison",
+      "title": "男子用 AI 冒充主播骗取加密货币，被判 47 个月",
       "source_url": "https://www.engadget.com/2329150/man-sentenced-to-47-month-prison-sentence-after-using-ai-impersonate-streamer/",
       "text": "你有没有想过，有一天你的钱可能被一个听起来像你朋友的声音骗走？最近美国就发生了这么一桩案子。有个叫大卫·安东尼·桑切斯的人，因为用AI伪造了知名游戏主播N3on的声音，骗了26万美金的加密货币，被判了47个月监禁。 事情是这样的：他先是冒充N3on本人，又假装是他的代表，用AI生成的语音跟项目方沟通，说要捐款、要转账，对方完全没怀疑，结果钱就这么没了。最吓人的是，这声音听起来就跟真人一模一样，连语气、节奏都模仿得特别像，普通人根本分不清。 这背后其实暴露了一个越来越严重的问题——AI深度伪造技术正在被用来搞金融诈骗。以前骗子可能还得学个口音，现在只要一段录音，就能复制出任何人的声音。尤其当目标是公众人物时，信任感更容易被利用。这件事也提醒我们，以后不管谁打电话、发语音，尤其是涉及钱的事，得多留个心眼。哪怕声音再熟，也得通过其他方式核实身份。"
     },
@@ -173,7 +173,7 @@
       "type": "story",
       "article_index": 20,
       "category": "Apple",
-      "title": "Apple still working on giant foldable iPad, launch uncertain amid technical hurdles",
+      "title": "苹果仍在研发大屏折叠 iPad，能否上市尚未确定",
       "source_url": "https://www.macrumors.com/2026/11/26/apple-still-working-on-giant-foldable-ipad/",
       "text": "苹果还在搞一个大得离谱的折叠iPad，可能要到2029年才见得到，但能不能真卖出去，现在还说不准。这台设备内部代号叫J312，展开后屏幕接近20英寸，差不多是普通平板的两倍大。价格估计在三到五千元之间，属于奢侈品级别。问题是，这玩意儿现在连操作系统都没定下来——到底是用iPadOS、macOS，还是全新系统？更麻烦的是，屏幕制造良率低，重量也压不住，光是这两个技术难题就让原定2027、2028年的计划一拖再拖。就连苹果硬件主管约翰·特恩斯都承认，它现在还只是个实验项目，没准最后就不了了之。之前还有消息说苹果取消了折叠 MacBook 的计划，但不确定是不是同一个项目。总之，这个大平板，听着很酷，但离真正落地，还差得远。"
     },
@@ -306,7 +306,7 @@
       "category": "消费科技"
     },
     {
-      "title": "AI impersonation scammer sentenced to 47 months in prison",
+      "title": "男子用 AI 冒充主播骗取加密货币，被判 47 个月",
       "url": "https://www.engadget.com/2329150/man-sentenced-to-47-month-prison-sentence-after-using-ai-impersonate-streamer/",
       "category": "消费科技"
     },
@@ -316,7 +316,7 @@
       "category": "消费科技"
     },
     {
-      "title": "Apple still working on giant foldable iPad, launch uncertain amid technical hurdles",
+      "title": "苹果仍在研发大屏折叠 iPad，能否上市尚未确定",
       "url": "https://www.macrumors.com/2026/11/26/apple-still-working-on-giant-foldable-ipad/",
       "category": "Apple"
     },

@@ -1,4 +1,5 @@
 name: Publish verified daily digest
+run-name: ${{ inputs.linux_timer && 'Publish daily digest · Ubuntu timer' || 'Publish verified daily digest' }}
 on:
   workflow_dispatch:
     inputs:
@@ -18,11 +19,6 @@ on:
         description: Regenerate audio for the currently published edition
         type: boolean
         default: false
-  schedule:
-    # Avoid GitHub Actions top-of-hour congestion (07:50 Beijing time).
-    - cron: '50 23 * * *'
-    # Give a delayed or missed primary run a second opportunity (09:17 Beijing time).
-    - cron: '17 1 * * *'
 permissions:
   contents: write
 concurrency:
@@ -60,7 +56,7 @@ jobs:
           PY
       - name: Check whether today's edition is already published
         id: edition
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.linux_timer && !inputs.preview_only && !inputs.audio_only) }}
+        if: ${{ inputs.linux_timer && !inputs.preview_only && !inputs.audio_only }}
         run: |
           git fetch origin main
           python3 - <<'PY'

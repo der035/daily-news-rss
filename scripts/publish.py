@@ -14,7 +14,7 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 
-from editorial_review import UnverifiedStory, audit_edition_images, audit_story
+from editorial_review import UnverifiedStory, audit_edition_images, audit_story, non_chinese_fields
 from text_completion import text_completion
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -347,6 +347,7 @@ def generate(items):
         "国内新闻可选以中国为中心、对国内有显著影响的涉华外交；国际政治避免复选该事件。Apple栏目只选苹果公司产品、操作系统、Apple Intelligence、供应链、服务和公司重大动向；消费科技优先选择其他厂商与行业事件，避免跨栏目重复。"
         "summary和context优先逐句贴合原始标题、摘要或证据。可简短；素材没有数字、原因、时间线或影响时宁可省略。只采用与原标题明确对应的摘录内容，忽略同页推荐文章。避免为了字数加入猜测，薄稿优先只说明范围与明确背景。"
         "区分事实、当事方说法与预测；不编造引语、原因或结果。"
+        "无论来源语言，title、summary、context和definition均须使用简体中文；产品名、机构名和缩写可保留原文。"
         "通读summary与context，按普通读者的陌生程度及对理解本文的帮助排序，通常选4至10项，优先政策简称、制度、技术、机构和赛事。常见概念、知名人物、正文已交代身份且无额外价值的人名跳过；name必须逐字出现于正文。"
         "definition用40至145字讲清是什么，再补上正文没有的职能、由来、运作机制或浅显例子。可补充稳定的百科知识，禁止猜测履历、现任职务和统计数据。evidence为输入素材逐字存在的至少12字连续片段，用于确认词指什么，不能拿它直接当释义。"
         "只返回JSON对象："
@@ -1054,7 +1055,12 @@ def main():
     items = collect()
     print("Recent sourced items:", len(items))
     items = enrich(items)
-    articles = audit_edition_images(generate(items), items)
+    articles = generate(items)
+    for article in articles:
+        invalid_fields = non_chinese_fields(article)
+        if invalid_fields:
+            raise ValueError("Non-Chinese story fields: " + ", ".join(invalid_fields) + " · " + article["title"])
+    articles = audit_edition_images(articles, items)
     if len(articles) != len(CATEGORIES) * STORIES_PER_CATEGORY:
         raise ValueError("Incomplete edition: expected " + str(len(CATEGORIES) * STORIES_PER_CATEGORY) + " stories")
     version = next_version()
